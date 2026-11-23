@@ -9,6 +9,10 @@ progress 事件，并保留其会话头。Cursor 和 Codex 通过同一个 OpenA
 
 你只对一个地址说话。由网关决定这一步谁来主导：便宜的助手收集数据，专家判断并作答，昂贵的模型只看到真正需要的内容。
 
+在 OpenCode 中，`/coffee-assistants` 和 `/coffee-experts` 分别打开助手和专家的模型选择器：
+
+![在 OpenCode 中选择助手和专家模型](assets/opencode-model-selection.gif)
+
 ## 状态
 
 网关由 Go 编写；所有当前工作都在 `go` 分支进行。此前的 Python 原型是另一个项目，不属于本仓库。

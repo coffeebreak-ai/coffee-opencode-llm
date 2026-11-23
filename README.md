@@ -12,6 +12,10 @@ connect through the same OpenAI-compatible API.
 You talk to one address. The gateway decides who leads the turn: a cheaper assistant gathers
 data, the expert judges and answers, and the expensive model only sees what it actually needs.
 
+In OpenCode, `/coffee-assistants` and `/coffee-experts` open the corresponding model selectors:
+
+![OpenCode assistant and expert model selectors](assets/opencode-model-selection.gif)
+
 ## Status
 
 The gateway is written in Go; all current work happens on the `go` branch. The earlier Python
