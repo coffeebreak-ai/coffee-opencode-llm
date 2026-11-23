@@ -31,6 +31,7 @@ func (c *Config) Validate() error {
 		{"stream_write_timeout_ms", c.Limits.StreamWriteTimeoutMS, 1000, 120000},
 
 		{"reasoning_context_enabled", c.ReasoningContextEnabled, 0, 1},
+		{"assistant2_reasoning_enabled", c.Assistant2Reasoning, 0, 1},
 		{"progress_enabled", c.Limits.ProgressEnabled, 0, 1},
 		{"progress_stage_enabled", c.Limits.ProgressStageEnabled, 0, 1},
 		{"progress_decision_enabled", c.Limits.ProgressDecisionEnabled, 0, 1},
@@ -127,9 +128,6 @@ func (c *Config) Validate() error {
 		return err
 	}
 	if err := oneOf("reasoning_mode", c.ReasoningMode, "min", "medium", "high", "max", "client"); err != nil {
-		return err
-	}
-	if err := oneOf("reasoning_trace_scope", c.ReasoningTraceScope, "full", "final"); err != nil {
 		return err
 	}
 	if err := oneOf("subscription_mode", c.SubscriptionMode, "free", "go", "go-plus", "go-teams"); err != nil {

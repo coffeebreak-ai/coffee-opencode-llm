@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"strings"
 	"time"
 
 	"github.com/coffeebreak-ai/coffee-opencode-llm/internal/catalog"
@@ -36,7 +35,6 @@ type delegationRequest struct {
 type actorOutcome struct {
 	Text               string
 	ReasoningContent   string
-	BufferedReasoning  string
 	ToolCalls          []transport.ToolCall
 	FinishReason       string
 	Usage              *transport.Usage
@@ -49,29 +47,25 @@ type actorOutcome struct {
 	Duration           time.Duration
 }
 
-// reasoningTraceable reports whether the reasoning of one completed call enters
-// the unified trace: TUI, archive and model context see the same set. The
-// deflator is a service call and never has reasoning; an incomplete call
-// (length, content_filter) is not archived (ADR 0024).
-func (t *turn) reasoningTraceable(kind actorKind, outcome *actorOutcome) bool {
-	if kind == actorDeflator || outcome.FinishReason == "length" ||
-		outcome.FinishReason == "content_filter" {
+// reasoningEnabled reports whether the actor's reasoning exists at all: the
+// master gate covers every consumer (TUI, archive, prompts, compaction), the
+// assistant 2 gate narrows the helper alone (ADR 0025). The deflator is a
+// service call and never has reasoning.
+func (t *turn) reasoningEnabled(kind actorKind) bool {
+	if kind == actorDeflator || !t.settings.ReasoningContextEnabled {
 		return false
 	}
-	return t.settings.ReasoningTraceScope != "final" || t.publicCall(kind, outcome)
+	return kind != actorHelper || t.settings.Assistant2Reasoning
 }
 
-// publicCall reports whether the call's text or tool calls reach the client.
-// The helper works for the expert under delegation and never goes public.
-func (t *turn) publicCall(kind actorKind, outcome *actorOutcome) bool {
-	switch kind {
-	case actorHelper:
+// reasoningTraceable reports whether the reasoning of one completed call is
+// archived and reused: enabled actors only, and incomplete calls (length,
+// content_filter) are never archived.
+func (t *turn) reasoningTraceable(kind actorKind, outcome *actorOutcome) bool {
+	if kind == actorDeflator || !t.reasoningEnabled(kind) {
 		return false
-	case actorExpert:
-		return outcome.Delegation == nil
-	default:
-		return !outcome.NeedsExpert && outcome.Delegation == nil
 	}
+	return outcome.FinishReason != "length" && outcome.FinishReason != "content_filter"
 }
 
 func (t *turn) callActor(ctx context.Context, kind actorKind, model catalog.Model, messages []transport.Message,
@@ -149,11 +143,15 @@ func (t *turn) callActor(ctx context.Context, kind actorKind, model catalog.Mode
 	)
 	var outcome *actorOutcome
 	if t.input.Stream {
-		outcome, err = t.callStreaming(ctx, request, allowDelegation)
+		outcome, err = t.callStreaming(ctx, kind, request, allowDelegation)
 	} else {
 		outcome, err = t.callBuffered(ctx, request, allowDelegation)
 	}
 	outcome = ensureOutcome(outcome)
+	if !t.reasoningEnabled(kind) {
+		outcome.ReasoningContent = ""
+		outcome.ReasoningSanitized = false
+	}
 	cleaned := SanitizeModelText(outcome.Text)
 	cleanedReasoning := SanitizeModelText(outcome.ReasoningContent)
 	outcome.Sanitized = cleaned != outcome.Text || cleanedReasoning != outcome.ReasoningContent
@@ -208,13 +206,6 @@ func (t *turn) callActor(ctx context.Context, kind actorKind, model catalog.Mode
 		if err := t.appendReasoning(ctx, outcome.ReasoningContent); err != nil {
 			return nil, fail("internal", http.StatusInternalServerError,
 				"Reasoning history is unavailable", err)
-		}
-	}
-	if t.input.Stream && t.settings.ReasoningTraceScope == "final" &&
-		outcome.BufferedReasoning != "" && t.reasoningTraceable(kind, outcome) {
-		if err := t.sink.reasoning(outcome.BufferedReasoning); err != nil {
-			return nil, fail("canceled", statusClientClosedRequest, "Client interrupted the request",
-				fmt.Errorf("%w: %w", errSinkClosed, err))
 		}
 	}
 	if outcome.NeedsExpert || outcome.Delegation != nil {
@@ -292,22 +283,11 @@ func (t *turn) callBuffered(ctx context.Context, request transport.ChatRequest,
 	return outcome, nil
 }
 
-func (t *turn) callStreaming(ctx context.Context, request transport.ChatRequest,
+func (t *turn) callStreaming(ctx context.Context, kind actorKind, request transport.ChatRequest,
 	allowDelegation bool) (*actorOutcome, error) {
 	emitText := t.engine.opts.StreamTextScope == "all"
-	liveReasoning := t.settings.ReasoningTraceScope != "final"
+	emitReasoning := t.reasoningEnabled(kind)
 	var reasoningSanitizer reasoningStreamSanitizer
-	var bufferedReasoning strings.Builder
-	writeReasoning := func(text string) error {
-		if liveReasoning {
-			if err := t.sink.reasoning(text); err != nil {
-				return fmt.Errorf("%w: %w", errSinkClosed, err)
-			}
-			return nil
-		}
-		bufferedReasoning.WriteString(text)
-		return nil
-	}
 	result, err := t.engine.transport.Stream(ctx, request, func(chunk transport.Chunk) error {
 		for _, choice := range chunk.Choices {
 			if choice.Delta.Content != nil && emitText {
@@ -315,10 +295,12 @@ func (t *turn) callStreaming(ctx context.Context, request transport.ChatRequest,
 					return fmt.Errorf("%w: %w", errSinkClosed, err)
 				}
 			}
-			if reasoning := choice.Delta.ReasoningText(); reasoning != "" {
-				if safe := reasoningSanitizer.Push(reasoning); safe != "" {
-					if err := writeReasoning(safe); err != nil {
-						return err
+			if emitReasoning {
+				if reasoning := choice.Delta.ReasoningText(); reasoning != "" {
+					if safe := reasoningSanitizer.Push(reasoning); safe != "" {
+						if err := t.sink.reasoning(safe); err != nil {
+							return fmt.Errorf("%w: %w", errSinkClosed, err)
+						}
 					}
 				}
 			}
@@ -331,13 +313,16 @@ func (t *turn) callStreaming(ctx context.Context, request transport.ChatRequest,
 		}
 		return nil, mapTransportError(err)
 	}
-	if reasoning := reasoningSanitizer.Flush(); reasoning != "" {
-		if err := writeReasoning(reasoning); err != nil {
-			return nil, fail("canceled", statusClientClosedRequest, "Client interrupted the request", err)
+	if emitReasoning {
+		if reasoning := reasoningSanitizer.Flush(); reasoning != "" {
+			if err := t.sink.reasoning(reasoning); err != nil {
+				return nil, fail("canceled", statusClientClosedRequest, "Client interrupted the request",
+					fmt.Errorf("%w: %w", errSinkClosed, err))
+			}
 		}
 	}
 	outcome := &actorOutcome{Text: result.Content, ReasoningContent: result.ReasoningContent,
-		BufferedReasoning: bufferedReasoning.String(), ToolCalls: result.ToolCalls,
+		ToolCalls:          result.ToolCalls,
 		ReasoningSanitized: reasoningSanitizer.Changed(),
 		FinishReason:       result.FinishReason, Usage: result.Usage}
 	if outcome.FinishReason == "" {

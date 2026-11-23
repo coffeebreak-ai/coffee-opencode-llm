@@ -6,32 +6,35 @@ import (
 	"github.com/coffeebreak-ai/coffee-opencode-llm/internal/router"
 )
 
-func TestReasoningTraceableGate(t *testing.T) {
-	base := &turn{settings: router.Settings{ReasoningTraceScope: "full"}}
-	final := &turn{settings: router.Settings{ReasoningTraceScope: "final"}}
+func TestReasoningGate(t *testing.T) {
 	cases := []struct {
 		name    string
 		turn    *turn
 		kind    actorKind
-		outcome *actorOutcome
 		want    bool
+		wantArc bool
 	}{
-		{"full assistant escalates", base, actorAssistant, &actorOutcome{NeedsExpert: true}, true},
-		{"full helper", base, actorHelper, &actorOutcome{}, true},
-		{"full deflator", base, actorDeflator, &actorOutcome{}, false},
-		{"full length finish", base, actorAssistant, &actorOutcome{FinishReason: "length"}, false},
-		{"full content filter", base, actorAssistant, &actorOutcome{FinishReason: "content_filter"}, false},
-		{"final assistant final", final, actorAssistant, &actorOutcome{}, true},
-		{"final assistant escalates", final, actorAssistant, &actorOutcome{NeedsExpert: true}, false},
-		{"final assistant delegates", final, actorAssistant, &actorOutcome{Delegation: &delegationRequest{}}, false},
-		{"final helper", final, actorHelper, &actorOutcome{}, false},
-		{"final expert final", final, actorExpert, &actorOutcome{}, true},
-		{"final expert delegates", final, actorExpert, &actorOutcome{Delegation: &delegationRequest{}}, false},
-		{"final deflator", final, actorDeflator, &actorOutcome{}, false},
+		{"master on assistant", &turn{settings: router.Settings{ReasoningContextEnabled: true}}, actorAssistant, true, true},
+		{"master on expert", &turn{settings: router.Settings{ReasoningContextEnabled: true}}, actorExpert, true, true},
+		{"master on helper allowed", &turn{settings: router.Settings{ReasoningContextEnabled: true, Assistant2Reasoning: true}}, actorHelper, true, true},
+		{"master on helper disabled", &turn{settings: router.Settings{ReasoningContextEnabled: true}}, actorHelper, false, false},
+		{"master off assistant", &turn{settings: router.Settings{}}, actorAssistant, false, false},
+		{"master off helper allowed", &turn{settings: router.Settings{Assistant2Reasoning: true}}, actorHelper, false, false},
+		{"deflator never", &turn{settings: router.Settings{ReasoningContextEnabled: true, Assistant2Reasoning: true}}, actorDeflator, false, false},
 	}
 	for _, test := range cases {
-		if got := test.turn.reasoningTraceable(test.kind, test.outcome); got != test.want {
-			t.Errorf("%s: traceable = %v, want %v", test.name, got, test.want)
+		if got := test.turn.reasoningEnabled(test.kind); got != test.want {
+			t.Errorf("%s: enabled = %v, want %v", test.name, got, test.want)
+		}
+		got := test.turn.reasoningTraceable(test.kind, &actorOutcome{FinishReason: "stop"})
+		if got != test.wantArc {
+			t.Errorf("%s: traceable = %v, want %v", test.name, got, test.wantArc)
+		}
+	}
+	complete := &turn{settings: router.Settings{ReasoningContextEnabled: true}}
+	for _, finish := range []string{"length", "content_filter"} {
+		if complete.reasoningTraceable(actorExpert, &actorOutcome{FinishReason: finish}) {
+			t.Errorf("%s finish must not be archived", finish)
 		}
 	}
 }

@@ -62,10 +62,9 @@ flowchart LR
 ## 思考过程（reasoning）
 
 模型的 reasoning 以 `reasoning_content` 字段原生流入 OpenCode 的 Thought 部分，从不混入
-回答正文。`reasoning_trace_scope` 决定哪些调用拥有它：`full` — 所有角色；`final` — 只有
-回答或工具调用会到达你的那些调用。压缩器永远没有 reasoning。开启
-`reasoning_context_enabled` 后，已完成调用的 reasoning 存档副本会在后续提示词中复用——
-前提是客户端历史确认它未被修改。
+回答正文。两个开关决定它是否存在，对屏幕、存档和模型上下文的作用完全一致：
+`reasoning_context_enabled` 是所有角色的总开关，`assistant2_reasoning_enabled` 单独控制
+助手 2。压缩器永远没有 reasoning。
 
 ## 模型
 
@@ -84,12 +83,12 @@ flowchart LR
 | --- | --- | --- |
 | `objective_mode` | `balanced` `quality` `price` | 决策模型优化什么 |
 | `reasoning_mode` | `min` `medium` `high` `max` `client` | reasoning 力度 |
-| `reasoning_context_enabled` | `off` `on` | 在后续提示词中复用 reasoning 存档 |
-| `reasoning_trace_scope` | `full` `final` | 哪些调用拥有 reasoning，处处一致 |
+| `reasoning_context_enabled` | `off` `on` | 总开关：reasoning 处处在，或处处无 |
+| `assistant2_reasoning_enabled` | `off` `on` | 助手 2 的 reasoning，屏幕与上下文一致 |
 | `subscription_mode` | `free` `go` `go-plus` `go-teams` | 上游套餐和 base URL |
 
 ```sh
-coffee-opencode-llm settings set reasoning_trace_scope final
+coffee-opencode-llm settings set reasoning_context_enabled on
 ```
 
 ## 限制

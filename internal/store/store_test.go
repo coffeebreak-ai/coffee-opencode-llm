@@ -121,15 +121,15 @@ func TestReasoningContextMigrationPreservesRuntimeSettings(t *testing.T) {
 	if item.Value != "on" || item.SourceKind != "command" {
 		t.Fatalf("reasoning setting = %+v", item)
 	}
-	if err := st.SetSetting(ctx, "reasoning_trace_scope", "final", "command"); err != nil {
-		t.Fatalf("write trace scope setting: %v", err)
+	if err := st.SetSetting(ctx, "assistant2_reasoning_enabled", "off", "command"); err != nil {
+		t.Fatalf("write assistant 2 setting: %v", err)
 	}
-	item, err = st.Setting(ctx, "reasoning_trace_scope")
+	item, err = st.Setting(ctx, "assistant2_reasoning_enabled")
 	if err != nil {
-		t.Fatalf("read trace scope setting: %v", err)
+		t.Fatalf("read assistant 2 setting: %v", err)
 	}
-	if item.Value != "final" || item.SourceKind != "command" {
-		t.Fatalf("trace scope setting = %+v", item)
+	if item.Value != "off" || item.SourceKind != "command" {
+		t.Fatalf("assistant 2 setting = %+v", item)
 	}
 }
 

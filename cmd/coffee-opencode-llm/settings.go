@@ -23,16 +23,16 @@ type effectiveSettings struct {
 	Objective        settingValue
 	Reasoning        settingValue
 	ReasoningContext settingValue
-	TraceScope       settingValue
+	Assistant2       settingValue
 	Subscription     settingValue
 }
 
 var settingValues = map[string][]string{
-	"objective_mode":            {"balanced", "quality", "price"},
-	"reasoning_mode":            {"min", "medium", "high", "max", "client"},
-	"reasoning_context_enabled": {"off", "on"},
-	"reasoning_trace_scope":     {"full", "final"},
-	"subscription_mode":         {"free", "go", "go-plus", "go-teams"},
+	"objective_mode":               {"balanced", "quality", "price"},
+	"reasoning_mode":               {"min", "medium", "high", "max", "client"},
+	"reasoning_context_enabled":    {"off", "on"},
+	"assistant2_reasoning_enabled": {"off", "on"},
+	"subscription_mode":            {"free", "go", "go-plus", "go-teams"},
 }
 
 func allowedValue(key, value string) error {
@@ -60,15 +60,15 @@ func readEffective(ctx context.Context, cfg *config.Config, st *store.Store) (ef
 		Objective:        settingValue{Value: cfg.ObjectiveMode, Source: configSource(cfg, "objective_mode")},
 		Reasoning:        settingValue{Value: cfg.ReasoningMode, Source: configSource(cfg, "reasoning_mode")},
 		ReasoningContext: settingValue{Value: reasoningContextValue(cfg.ReasoningContextEnabled), Source: configSource(cfg, "reasoning_context_enabled")},
-		TraceScope:       settingValue{Value: cfg.ReasoningTraceScope, Source: configSource(cfg, "reasoning_trace_scope")},
+		Assistant2:       settingValue{Value: reasoningContextValue(cfg.Assistant2Reasoning), Source: configSource(cfg, "assistant2_reasoning_enabled")},
 		Subscription:     settingValue{Value: cfg.SubscriptionMode, Source: configSource(cfg, "subscription_mode")},
 	}
 	targets := map[string]*settingValue{
-		"objective_mode":            &out.Objective,
-		"reasoning_mode":            &out.Reasoning,
-		"reasoning_context_enabled": &out.ReasoningContext,
-		"reasoning_trace_scope":     &out.TraceScope,
-		"subscription_mode":         &out.Subscription,
+		"objective_mode":               &out.Objective,
+		"reasoning_mode":               &out.Reasoning,
+		"reasoning_context_enabled":    &out.ReasoningContext,
+		"assistant2_reasoning_enabled": &out.Assistant2,
+		"subscription_mode":            &out.Subscription,
 	}
 	keys := make([]string, 0, len(targets))
 	for key := range targets {
@@ -139,7 +139,7 @@ func runSettingsShow(args []string) error {
 		{"objective_mode", effective.Objective},
 		{"reasoning_mode", effective.Reasoning},
 		{"reasoning_context_enabled", effective.ReasoningContext},
-		{"reasoning_trace_scope", effective.TraceScope},
+		{"assistant2_reasoning_enabled", effective.Assistant2},
 		{"subscription_mode", effective.Subscription},
 	} {
 		if _, err := fmt.Fprintf(writer, "%s\t%s\tsource=%s\n", item.key, item.value.Value, item.value.Source); err != nil {
@@ -158,7 +158,7 @@ func runSettingsSet(args []string) error {
 		return err
 	}
 	if len(positional) != 2 {
-		return failf("usage: coffee-opencode-llm settings set <objective_mode|reasoning_mode|reasoning_context_enabled|reasoning_trace_scope> <value>")
+		return failf("usage: coffee-opencode-llm settings set <objective_mode|reasoning_mode|reasoning_context_enabled|assistant2_reasoning_enabled> <value>")
 	}
 	key, value := positional[0], positional[1]
 	if key == "subscription_mode" {

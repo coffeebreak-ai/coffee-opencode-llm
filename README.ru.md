@@ -69,11 +69,10 @@ flowchart LR
 ## Reasoning
 
 Reasoning модели стримится в Thought-часть OpenCode нативно, полем `reasoning_content`, не
-примешиваясь к ответу. `reasoning_trace_scope` решает, у каких вызовов оно есть: `full` — у всех
-актёров; `final` — только у вызовов, чей ответ или tool-calls доходят до вас. У дефлятора
-reasoning нет никогда. При включённом `reasoning_context_enabled` архивная копия reasoning
-завершённых вызовов переиспользуется в следующих промптах — после того как клиентская история
-подтвердит её без изменений.
+примешиваясь к ответу. Два gate решают, где оно вообще существует, с одинаковым действием на
+экран, архив и контекст модели: `reasoning_context_enabled` — мастер-выключатель для всех
+актёров, `assistant2_reasoning_enabled` сужает только помощника. У дефлятора reasoning нет
+никогда.
 
 ## Модели
 
@@ -93,12 +92,12 @@ reasoning нет никогда. При включённом `reasoning_context_
 | --- | --- | --- |
 | `objective_mode` | `balanced` `quality` `price` | что оптимизирует решающая модель |
 | `reasoning_mode` | `min` `medium` `high` `max` `client` | уровень reasoning |
-| `reasoning_context_enabled` | `off` `on` | переиспользовать архив reasoning в промптах |
-| `reasoning_trace_scope` | `full` `final` | у каких вызовов есть reasoning, везде сразу |
+| `reasoning_context_enabled` | `off` `on` | мастер-выключатель: reasoning везде или нигде |
+| `assistant2_reasoning_enabled` | `off` `on` | reasoning помощника, экран и контекст одинаково |
 | `subscription_mode` | `free` `go` `go-plus` `go-teams` | план апстрима и base URL |
 
 ```sh
-coffee-opencode-llm settings set reasoning_trace_scope final
+coffee-opencode-llm settings set reasoning_context_enabled on
 ```
 
 ## Лимиты

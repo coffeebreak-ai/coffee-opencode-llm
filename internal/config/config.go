@@ -22,7 +22,7 @@ type Config struct {
 	ObjectiveMode           string              `yaml:"objective_mode" env:"OBJECTIVE_MODE"`
 	ReasoningMode           string              `yaml:"reasoning_mode" env:"REASONING_MODE"`
 	ReasoningContextEnabled int64               `yaml:"reasoning_context_enabled" env:"REASONING_CONTEXT_ENABLED"`
-	ReasoningTraceScope     string              `yaml:"reasoning_trace_scope" env:"REASONING_TRACE_SCOPE"`
+	Assistant2Reasoning     int64               `yaml:"assistant2_reasoning_enabled" env:"ASSISTANT2_REASONING_ENABLED"`
 	SubscriptionMode        string              `yaml:"subscription_mode" env:"SUBSCRIPTION_MODE"`
 	Limits                  Limits              `yaml:"limits"`
 	ProgressTexts           map[string]string   `yaml:"progress_texts"`

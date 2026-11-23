@@ -22,7 +22,7 @@ type Options struct {
 	ObjectiveMode           string
 	ReasoningMode           string
 	ReasoningContextEnabled bool
-	ReasoningTraceScope     string
+	Assistant2Reasoning     bool
 	SubscriptionMode        string
 	BalanceTurns            int64
 	CharsPerToken           int64
@@ -129,7 +129,7 @@ type Settings struct {
 	ObjectiveMode           string
 	ReasoningMode           string
 	ReasoningContextEnabled bool
-	ReasoningTraceScope     string
+	Assistant2Reasoning     bool
 	SubscriptionMode        string
 	Source                  string
 }
@@ -139,7 +139,7 @@ func (r *Router) Settings(ctx context.Context) (Settings, error) {
 		ObjectiveMode:           r.opts.ObjectiveMode,
 		ReasoningMode:           r.opts.ReasoningMode,
 		ReasoningContextEnabled: r.opts.ReasoningContextEnabled,
-		ReasoningTraceScope:     r.opts.ReasoningTraceScope,
+		Assistant2Reasoning:     r.opts.Assistant2Reasoning,
 		SubscriptionMode:        r.opts.SubscriptionMode,
 		Source:                  "config",
 	}
@@ -171,16 +171,18 @@ func (r *Router) Settings(ctx context.Context) (Settings, error) {
 	} else if !errors.Is(err, store.ErrNotFound) {
 		return Settings{}, fmt.Errorf("read setting reasoning_context_enabled: %w", err)
 	}
-	if item, err := r.store.Setting(ctx, "reasoning_trace_scope"); err == nil {
+	if item, err := r.store.Setting(ctx, "assistant2_reasoning_enabled"); err == nil {
 		switch item.Value {
-		case "full", "final":
-			out.ReasoningTraceScope = item.Value
+		case "off":
+			out.Assistant2Reasoning = false
+		case "on":
+			out.Assistant2Reasoning = true
 		default:
-			return Settings{}, fmt.Errorf("reasoning_trace_scope has invalid value %q", item.Value)
+			return Settings{}, fmt.Errorf("assistant2_reasoning_enabled has invalid value %q", item.Value)
 		}
 		out.Source = item.SourceKind
 	} else if !errors.Is(err, store.ErrNotFound) {
-		return Settings{}, fmt.Errorf("read setting reasoning_trace_scope: %w", err)
+		return Settings{}, fmt.Errorf("read setting assistant2_reasoning_enabled: %w", err)
 	}
 	return out, nil
 }

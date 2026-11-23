@@ -71,10 +71,10 @@ flowchart LR
 ## Reasoning
 
 Model reasoning streams into the OpenCode Thought part natively, as `reasoning_content`, never
-mixed into the answer. `reasoning_trace_scope` decides which calls have it: `full` — every actor;
-`final` — only the calls whose answer or tool calls reach you. The deflator never has reasoning.
-When `reasoning_context_enabled` is on, the archived reasoning of completed calls is reused in
-later prompts — after the client history confirms it unchanged.
+mixed into the answer. Two gates decide where it exists at all, with identical effect on the
+screen, the archive and the model context: `reasoning_context_enabled` is the master switch for
+every actor, and `assistant2_reasoning_enabled` narrows the helper alone. The deflator never has
+reasoning.
 
 ## Models
 
@@ -94,12 +94,12 @@ Settings are global, stored in the database and applied without a restart:
 | --- | --- | --- |
 | `objective_mode` | `balanced` `quality` `price` | what the decision model optimizes |
 | `reasoning_mode` | `min` `medium` `high` `max` `client` | reasoning effort |
-| `reasoning_context_enabled` | `off` `on` | reuse archived reasoning in later prompts |
-| `reasoning_trace_scope` | `full` `final` | which calls have reasoning, everywhere at once |
+| `reasoning_context_enabled` | `off` `on` | master switch: reasoning everywhere, or nowhere |
+| `assistant2_reasoning_enabled` | `off` `on` | helper reasoning, same effect on screen and context |
 | `subscription_mode` | `free` `go` `go-plus` `go-teams` | upstream plan and base URL |
 
 ```sh
-coffee-opencode-llm settings set reasoning_trace_scope final
+coffee-opencode-llm settings set reasoning_context_enabled on
 ```
 
 ## Limits

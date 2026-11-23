@@ -687,7 +687,8 @@ func TestStreamingToolCalls(t *testing.T) {
 			`[DONE]`,
 		)
 	}}
-	gateway := newGateway(t, startUpstream(t, upstream))
+	gateway := newGatewayFixture(t, startUpstream(t, upstream), testModelsYAML)
+	enableReasoningContext(t, gateway)
 
 	body := `{"model":"coffee-opencode-llm","messages":[{"role":"user","content":"read a"}],"stream":true}`
 	response, raw := postWithClient(t, gateway.URL, "ses_stream_tools", "cli", body)
@@ -1179,6 +1180,7 @@ func TestFinalScopeStreamsFinalModelReasoning(t *testing.T) {
 		)
 	}}
 	fixture := newGatewayFixtureWith(t, startUpstream(t, upstream), testModelsYAML, testProgressOptions(), "final")
+	enableReasoningContext(t, fixture)
 
 	body := `{"model":"coffee-opencode-llm","stream":true,"messages":[{"role":"user","content":"hello"}]}`
 	response, raw := postWithClient(t, fixture.URL, "ses_final_scope", "cli", body)
@@ -1219,6 +1221,7 @@ func TestFinalScopeStreamsReasoningFromInternalModelCalls(t *testing.T) {
 	}}
 	fixture := newGatewayFixtureWith(t, startUpstream(t, upstream), testModelsYAML,
 		testProgressOptions(), "final")
+	enableReasoningContext(t, fixture)
 	body := `{"model":"coffee-opencode-llm","stream":true,"messages":[{"role":"user","content":"review"}]}`
 	response, raw := postWithClient(t, fixture.URL, "ses_live_internal_reasoning", "cli", body)
 	if response.StatusCode != http.StatusOK {
@@ -1256,6 +1259,7 @@ func TestReasoningAndCommandTagsAreStrippedFromStream(t *testing.T) {
 		)
 	}}
 	fixture := newGatewayFixture(t, startUpstream(t, upstream), testModelsYAML)
+	enableReasoningContext(t, fixture)
 
 	body := `{"model":"coffee-opencode-llm","stream":true,"messages":[{"role":"user","content":"hello"}]}`
 	response, raw := postWithClient(t, fixture.URL, "ses_command_stream", "cli", body)
@@ -1276,7 +1280,7 @@ func TestReasoningAndCommandTagsAreStrippedFromStream(t *testing.T) {
 	}
 }
 
-func TestReasoningTraceScopeFinalHidesInternalReasoning(t *testing.T) {
+func TestReasoningContextDisabledHidesAllReasoning(t *testing.T) {
 	upstream := &fakeUpstream{respond: func(call int, _ transport.ChatRequest, w http.ResponseWriter) {
 		if call == 1 {
 			writeSSE(w,
@@ -1290,7 +1294,7 @@ func TestReasoningTraceScopeFinalHidesInternalReasoning(t *testing.T) {
 			return
 		}
 		writeSSE(w,
-			`{"id":"up-2","object":"chat.completion.chunk","created":1,"model":"exp-a","choices":[{"index":0,"delta":{"reasoning_content":"expert public thought"}}]}`,
+			`{"id":"up-2","object":"chat.completion.chunk","created":1,"model":"exp-a","choices":[{"index":0,"delta":{"reasoning_content":"expert thought"}}]}`,
 			`{"id":"up-2","object":"chat.completion.chunk","created":1,"model":"exp-a","choices":[{"index":0,"delta":{"content":"final answer"}}]}`,
 			`{"id":"up-2","object":"chat.completion.chunk","created":1,"model":"exp-a","choices":[{"index":0,"delta":{},"finish_reason":"stop"}]}`,
 			`[DONE]`,
@@ -1298,20 +1302,16 @@ func TestReasoningTraceScopeFinalHidesInternalReasoning(t *testing.T) {
 	}}
 	fixture := newGatewayFixtureWith(t, startUpstream(t, upstream), testModelsYAML,
 		testProgressOptions(), "final")
-	if err := fixture.store.SetSetting(context.Background(),
-		"reasoning_trace_scope", "final", "command"); err != nil {
-		t.Fatal(err)
-	}
 	body := `{"model":"coffee-opencode-llm","stream":true,"messages":[{"role":"user","content":"review"}]}`
-	response, raw := postWithClient(t, fixture.URL, "ses_trace_scope_final", "cli", body)
+	response, raw := postWithClient(t, fixture.URL, "ses_reasoning_disabled", "cli", body)
 	if response.StatusCode != http.StatusOK {
 		t.Fatalf("status = %d, body = %s", response.StatusCode, raw)
 	}
-	if strings.Contains(raw, "assistant internal thought") {
-		t.Fatalf("internal reasoning leaked under the final trace scope:\n%s", raw)
+	if strings.Contains(raw, "reasoning_content") {
+		t.Fatalf("reasoning leaked with the master gate off:\n%s", raw)
 	}
-	if !strings.Contains(raw, `"reasoning_content":"expert public thought"`) {
-		t.Fatalf("public reasoning is missing under the final trace scope:\n%s", raw)
+	if !strings.Contains(raw, `"content":"final answer"`) {
+		t.Fatalf("the final answer is missing:\n%s", raw)
 	}
 
 	db, err := sql.Open("sqlite", fixture.dbPath)
@@ -1323,21 +1323,21 @@ func TestReasoningTraceScopeFinalHidesInternalReasoning(t *testing.T) {
 			t.Errorf("close database: %v", err)
 		}
 	}()
-	var internalRows int
-	if err := db.QueryRow(`SELECT COUNT(*) FROM message WHERE reasoning_content = ?`,
-		"assistant internal thought").Scan(&internalRows); err != nil {
+	var reasoningRows int
+	if err := db.QueryRow(`SELECT COUNT(*) FROM message WHERE reasoning_content IS NOT NULL`).
+		Scan(&reasoningRows); err != nil {
 		t.Fatal(err)
 	}
-	if internalRows != 0 {
-		t.Fatalf("internal reasoning archived: rows = %d", internalRows)
+	if reasoningRows != 0 {
+		t.Fatalf("master-off reasoning rows = %d, want none", reasoningRows)
 	}
-	var publicRows int
-	if err := db.QueryRow(`SELECT COUNT(*) FROM message WHERE reasoning_content = ?`,
-		"expert public thought").Scan(&publicRows); err != nil {
+}
+
+func enableReasoningContext(t *testing.T, fixture *gatewayFixture) {
+	t.Helper()
+	if err := fixture.store.SetSetting(context.Background(),
+		"reasoning_context_enabled", "on", "command"); err != nil {
 		t.Fatal(err)
-	}
-	if publicRows != 1 {
-		t.Fatalf("public reasoning rows = %d, want one", publicRows)
 	}
 }
 
@@ -1395,6 +1395,7 @@ func TestBufferedReasoningIsTransientAndOpenCodeOnly(t *testing.T) {
 		}
 	}}
 	fixture := newGatewayFixture(t, startUpstream(t, upstream), testModelsYAML)
+	enableReasoningContext(t, fixture)
 	body := `{"model":"coffee-opencode-llm","stream":false,"messages":[{"role":"user","content":"hello"}]}`
 
 	response, raw := postWithClient(t, fixture.URL, "ses_buffered_reasoning", "cli", body)
@@ -1877,6 +1878,7 @@ func TestReasoningStreamsSeparatelyAndActionSummaryRemains(t *testing.T) {
 	}}
 	fixture := newGatewayFixtureWith(t, startUpstream(t, upstream), testModelsYAML,
 		testProgressOptions(), "all", nil)
+	enableReasoningContext(t, fixture)
 
 	body := `{"model":"coffee-opencode-llm","stream":true,"messages":[{"role":"user","content":"hello"}]}`
 	response, raw := postWithClient(t, fixture.URL, "ses_thought", "cli", body)

@@ -120,7 +120,7 @@ func runServe(args []string) error {
 		ObjectiveMode:           settings.Objective.Value,
 		ReasoningMode:           settings.Reasoning.Value,
 		ReasoningContextEnabled: settings.ReasoningContext.Value == "on",
-		ReasoningTraceScope:     settings.TraceScope.Value,
+		Assistant2Reasoning:     settings.Assistant2.Value == "on",
 		SubscriptionMode:        settings.Subscription.Value,
 		BalanceTurns:            cfg.Limits.ObjectiveBalanceTurns,
 		CharsPerToken:           cfg.Limits.CharsPerToken,
