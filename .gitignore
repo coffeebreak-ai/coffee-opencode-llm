@@ -20,3 +20,24 @@ graphiti/
 external/
 docker-compose.yml
 CURSOR.md
+
+# Local development process, not part of the public repository
+AGENTS.md
+EXPERIENCE.md
+.opencode/
+
+# Go build and test artifacts
+bin/
+*.test
+*.out
+coverage.*
+*.prof
+
+# Local runtime state
+*.pid
+*.log
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3

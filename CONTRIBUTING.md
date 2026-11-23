@@ -1,9 +1,9 @@
 # Как предлагать изменения
 
-English: this is a personal repository. Open a GitHub issue or pull request on `coffeebreak-ai/coffee-llm`. Read `docs/session.md` and `docs/scheme.md` before changing product behavior. Do not commit `.env` or keys. The specification language is Russian.
+English: this is a personal repository. Open a GitHub issue or pull request on `coffeebreak-ai/coffee-opencode-llm`. The public contract is `api/openapi.yaml`; product behavior is documented in `README.md`. Do not commit `.env` or keys.
 
-Русский: репозиторий личный. Задача или запрос на слияние — в GitHub `coffeebreak-ai/coffee-llm`. Перед изменением поведения прочитайте `docs/session.md` и `docs/scheme.md`. Файл `.env` и ключи не коммитить. Спецификация ведётся по-русски.
+Русский: репозиторий личный. Задача или запрос на слияние — в GitHub `coffeebreak-ai/coffee-opencode-llm`. Публичный контракт — `api/openapi.yaml`; поведение продукта описано в `README.md`. Файл `.env` и ключи не коммитить.
 
-简体中文：这是个人仓库。请在 GitHub `coffeebreak-ai/coffee-llm` 提交议题或拉取请求。改动产品行为之前先读 `docs/session.md` 和 `docs/scheme.md`。不要提交 `.env` 和密钥。规格书使用俄文。
+简体中文：这是个人仓库。请在 GitHub `coffeebreak-ai/coffee-opencode-llm` 提交议题或拉取请求。公开契约是 `api/openapi.yaml`；产品行为记录在 `README.md`。不要提交 `.env` 和密钥。
 
 Кодекс поведения публичного сообщества не принят: авторов один, приём изменений решает он.
