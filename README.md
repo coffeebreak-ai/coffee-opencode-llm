@@ -5,6 +5,10 @@
 A personal gateway in front of many models. In OpenCode, Cursor and Codex the model is named
 `Coffee LLM`; in code and configuration the name is `coffee-opencode-llm`.
 
+The gateway is built for **OpenCode first**: it speaks the OpenCode provider protocol, streams the
+Thought reasoning part and progress events, and keeps its session headers. Cursor and Codex
+connect through the same OpenAI-compatible API.
+
 You talk to one address. The gateway decides who leads the turn: a cheaper assistant gathers
 data, the expert judges and answers, and the expensive model only sees what it actually needs.
 
@@ -18,15 +22,17 @@ removed after the first working Go release.
 
 ```mermaid
 flowchart LR
-    human["Human"] --> client["OpenCode / Cursor / Codex"]
-    client -->|"POST /v1/chat/completions"| gw["coffee-opencode-llm gateway"]
+    human["Human"] --> oc["OpenCode (primary client)"]
+    oc -->|"POST /v1/chat/completions"| gw["coffee-opencode-llm gateway"]
     gw --> decide["Level and model decision"]
     decide -->|"level 1"| asst["assistant 1"]
     decide -->|"level 2"| expert["expert"]
     asst -->|"escalation"| expert
     expert -->|"gateway_assistant"| helper["assistant 2 subdialogue"]
-    asst -->|"tool calls"| client
-    expert -->|"tool calls"| client
+    asst -->|"tool calls"| oc
+    expert -->|"tool calls"| oc
+    oc -->|"long tool result"| deflator["deflator"]
+    deflator -->|"condensed"| expert
     asst -->|"simple answer"| human
     expert -->|"final answer"| human
 ```
@@ -37,6 +43,9 @@ Two access levels, raised only upwards:
 - **Level 2** — the expert owns the dialogue with the full client tool catalog plus the virtual
   `gateway_assistant` tool. Assistant 2 runs its own subdialogue, uses the client tools and
   returns findings, sources, limits and gaps.
+- The **deflator** is the youngest role: a separate cheap model that condenses long tool results
+  and the covered history. It never talks to the human and never takes quota from the senior
+  roles.
 
 The gateway never executes external calls itself: it returns them to the client, the client
 executes them and sends results back. That keeps secrets and MCP connections on the client side.
@@ -128,7 +137,7 @@ curl http://127.0.0.1:8080/v1/models
 
 | Client | Setting |
 | --- | --- |
-| OpenCode | provider with `baseURL` pointing at the gateway, model `coffee-opencode-llm` |
+| OpenCode (primary) | provider with `baseURL` pointing at the gateway, model `coffee-opencode-llm` |
 | Cursor | OpenAI-compatible base URL, model `coffee-opencode-llm` |
 | Codex | `wire_api = "responses"`, base URL of the gateway |
 

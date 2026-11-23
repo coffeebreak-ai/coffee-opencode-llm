@@ -4,6 +4,9 @@
 
 放在许多模型前面的个人网关。在 OpenCode、Cursor 和 Codex 中模型名叫 `Coffee LLM`；在代码和配置里是不带空格的 `coffee-opencode-llm`。
 
+网关**首先为 OpenCode 而构建**：使用它的 provider 协议，流式传输 Thought 推理部分和
+progress 事件，并保留其会话头。Cursor 和 Codex 通过同一个 OpenAI 兼容 API 接入。
+
 你只对一个地址说话。由网关决定这一步谁来主导：便宜的助手收集数据，专家判断并作答，昂贵的模型只看到真正需要的内容。
 
 ## 状态
@@ -14,15 +17,17 @@
 
 ```mermaid
 flowchart LR
-    human["人"] --> client["OpenCode / Cursor / Codex"]
-    client -->|"POST /v1/chat/completions"| gw["coffee-opencode-llm 网关"]
+    human["人"] --> oc["OpenCode（主要客户端）"]
+    oc -->|"POST /v1/chat/completions"| gw["coffee-opencode-llm 网关"]
     gw --> decide["选择级别和模型"]
     decide -->|"级别 1"| asst["助手 1"]
     decide -->|"级别 2"| expert["专家"]
     asst -->|"升级"| expert
     expert -->|"gateway_assistant"| helper["助手 2 子对话"]
-    asst -->|"tool calls"| client
-    expert -->|"tool calls"| client
+    asst -->|"tool calls"| oc
+    expert -->|"tool calls"| oc
+    oc -->|"过长的工具结果"| deflator["压缩器"]
+    deflator -->|"压缩后的文本"| expert
     asst -->|"简单回答"| human
     expert -->|"最终回答"| human
 ```
@@ -32,6 +37,8 @@ flowchart LR
 - **级别 1** — 助手 1 主导对话，获得客户端的完整工具目录。
 - **级别 2** — 专家主导对话：客户端的完整目录，加上虚拟工具 `gateway_assistant`。助手 2
   运行自己的子对话，使用客户端工具，交回发现、来源、限额和缺口。
+- **压缩器**是最低的角色：一个单独的便宜模型，压缩过长的工具结果和已覆盖的历史。
+  不对人作答，也不从高级角色那里抢占配额。
 
 网关从不自己执行外部调用：它把调用交回客户端，由客户端执行并送回结果。密钥和 MCP
 连接因此留在客户端一侧。
@@ -115,7 +122,7 @@ curl http://127.0.0.1:8080/v1/models
 
 | 客户端 | 配置 |
 | --- | --- |
-| OpenCode | provider 的 `baseURL` 指向网关，模型 `coffee-opencode-llm` |
+| OpenCode（主要） | provider 的 `baseURL` 指向网关，模型 `coffee-opencode-llm` |
 | Cursor | OpenAI 兼容 base URL，模型 `coffee-opencode-llm` |
 | Codex | `wire_api = "responses"`，网关的 base URL |
 
