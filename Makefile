@@ -5,7 +5,7 @@ PID_FILE ?= $(DATA_PATH)/coffee-opencode-llm.pid
 RETENTION_CONFIRM ?= no
 RETENTION_BATCH_ROWS ?= 1000
 
-.PHONY: build run stop test lint lint-fix lint-config mocks mocks-clean fmt vet migrate catalog retention retention-apply tidy clean
+.PHONY: build run stop test lint lint-fix lint-config fmt vet migrate catalog retention retention-apply tidy clean
 
 build:
 	$(GO) build -trimpath -o $(BINARY) ./cmd/coffee-opencode-llm
@@ -27,13 +27,6 @@ lint-fix:
 
 lint-config:
 	golangci-lint config verify
-	mockery showconfig >/dev/null 2>&1
-
-mocks:
-	mockery
-
-mocks-clean:
-	rm -rf mocks
 
 fmt:
 	gofmt -l -w .

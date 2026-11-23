@@ -30,7 +30,9 @@ flowchart LR
     expert -->|"gateway_assistant"| helper["assistant 2 subdialogue"]
     asst -->|"tool calls"| oc
     expert -->|"tool calls"| oc
-    oc -->|"long tool result"| deflator["deflator"]
+    oc -->|"long tool result"| jevd["Jev: compress?"]
+    jevd -->|"compress"| deflator["deflator"]
+    jevd -->|"keep as is"| expert
     deflator -->|"condensed"| expert
     asst -->|"simple answer"| human
     expert -->|"final answer"| human
@@ -100,8 +102,8 @@ Settings are global, stored in the database and applied without a restart:
 
 | Setting | Values | Default | Meaning |
 | --- | --- | --- | --- |
-| `objective_mode` | `balanced` `quality` `price` | `balanced` | what the decision model optimizes |
-| `reasoning_mode` | `min` `medium` `high` `max` `client` | `client` | reasoning effort |
+| `objective_mode` | `balanced` `quality` `price` | `balanced` | reserved: stored and shown, no effect on routing yet |
+| `reasoning_mode` | `min` `medium` `high` `max` `client` | `client` | reasoning effort; `client` follows the effort of each model call |
 | `reasoning_context_enabled` | `off` `on` | `off` | master switch: reasoning everywhere, or nowhere |
 | `assistant2_reasoning_enabled` | `off` `on` | `on` | helper reasoning, same effect on screen and context |
 | `subscription_mode` | `free` `go` `go-plus` `go-teams` | `free` | upstream plan and base URL |

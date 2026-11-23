@@ -30,7 +30,9 @@ flowchart LR
     expert -->|"gateway_assistant"| helper["поддиалог ассистента 2"]
     asst -->|"tool calls"| oc
     expert -->|"tool calls"| oc
-    oc -->|"длинный результат инструмента"| deflator["дефлятор"]
+    oc -->|"длинный результат инструмента"| jevd["Jev: сжать?"]
+    jevd -->|"сжимать"| deflator["дефлятор"]
+    jevd -->|"как есть"| expert
     deflator -->|"сжатый текст"| expert
     asst -->|"простой ответ"| human
     expert -->|"финальный ответ"| human
@@ -98,8 +100,8 @@ Reasoning модели стримится в Thought-часть OpenCode нат�
 
 | Настройка | Значения | По умолчанию | Смысл |
 | --- | --- | --- | --- |
-| `objective_mode` | `balanced` `quality` `price` | `balanced` | что оптимизирует решающая модель |
-| `reasoning_mode` | `min` `medium` `high` `max` `client` | `client` | уровень reasoning |
+| `objective_mode` | `balanced` `quality` `price` | `balanced` | зарезервировано: хранится и показывается, на выбор модели пока не влияет |
+| `reasoning_mode` | `min` `medium` `high` `max` `client` | `client` | уровень reasoning; `client` берёт глубину из самого вызова модели |
 | `reasoning_context_enabled` | `off` `on` | `off` | мастер-выключатель: reasoning везде или нигде |
 | `assistant2_reasoning_enabled` | `off` `on` | `on` | reasoning помощника, экран и контекст одинаково |
 | `subscription_mode` | `free` `go` `go-plus` `go-teams` | `free` | план апстрима и base URL |

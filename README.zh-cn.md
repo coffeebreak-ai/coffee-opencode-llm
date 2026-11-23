@@ -26,7 +26,9 @@ flowchart LR
     expert -->|"gateway_assistant"| helper["助手 2 子对话"]
     asst -->|"tool calls"| oc
     expert -->|"tool calls"| oc
-    oc -->|"过长的工具结果"| deflator["压缩器"]
+    oc -->|"过长的工具结果"| jevd["Jev：压缩判定"]
+    jevd -->|"压缩"| deflator["压缩器"]
+    jevd -->|"保持原样"| expert
     deflator -->|"压缩后的文本"| expert
     asst -->|"简单回答"| human
     expert -->|"最终回答"| human
@@ -88,8 +90,8 @@ flowchart LR
 
 | 设置 | 取值 | 默认值 | 含义 |
 | --- | --- | --- | --- |
-| `objective_mode` | `balanced` `quality` `price` | `balanced` | 决策模型优化什么 |
-| `reasoning_mode` | `min` `medium` `high` `max` `client` | `client` | reasoning 力度 |
+| `objective_mode` | `balanced` `quality` `price` | `balanced` | 保留：已存储和显示，暂不影响路由 |
+| `reasoning_mode` | `min` `medium` `high` `max` `client` | `client` | reasoning 力度；`client` 跟随每次模型调用的力度 |
 | `reasoning_context_enabled` | `off` `on` | `off` | 总开关：reasoning 处处在，或处处无 |
 | `assistant2_reasoning_enabled` | `off` `on` | `on` | 助手 2 的 reasoning，屏幕与上下文一致 |
 | `subscription_mode` | `free` `go` `go-plus` `go-teams` | `free` | 上游套餐和 base URL |
