@@ -11,7 +11,7 @@ progress 事件，并保留其会话头。Cursor 和 Codex 通过同一个 OpenA
 
 ## 状态
 
-网关正在从 Python 重写为 Go。工作在 `go` 分支进行；`main` 保持不动。Python 实现仅作为参考保留在 `coffee_llm/`，将在第一个可用的 Go 版本发布后移除。
+网关由 Go 编写；所有当前工作都在 `go` 分支进行。此前的 Python 原型是另一个项目，不属于本仓库。
 
 ## 工作方式
 
@@ -19,7 +19,7 @@ progress 事件，并保留其会话头。Cursor 和 Codex 通过同一个 OpenA
 flowchart LR
     human["人"] --> oc["OpenCode（主要客户端）"]
     oc -->|"POST /v1/chat/completions"| gw["coffee-opencode-llm 网关"]
-    gw --> decide["选择级别和模型"]
+    gw --> decide["Jev：选择级别和模型"]
     decide -->|"级别 1"| asst["助手 1"]
     decide -->|"级别 2"| expert["专家"]
     asst -->|"升级"| expert
@@ -134,7 +134,6 @@ internal/             config, httpapi, engine, router, catalog, ledger, jev, tra
 api/openapi.yaml      面向客户端和插件的契约
 config/               gateway.yaml（限制），models.yaml（目录）
 migrations/           NNNN_name.sqlite.sql, NNNN_name.postgres.sql
-coffee_llm/           Python 参考，第一个 Go 版本发布后移除
 ```
 
 ## 文档

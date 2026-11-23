@@ -14,9 +14,8 @@ data, the expert judges and answers, and the expensive model only sees what it a
 
 ## Status
 
-The gateway is being rewritten from Python to Go. Current work happens on the `go` branch; `main`
-stays untouched. The Python implementation is kept in `coffee_llm/` as a reference only and will be
-removed after the first working Go release.
+The gateway is written in Go; all current work happens on the `go` branch. The earlier Python
+prototype was a separate project and is not part of this repository.
 
 ## How it works
 
@@ -24,7 +23,7 @@ removed after the first working Go release.
 flowchart LR
     human["Human"] --> oc["OpenCode (primary client)"]
     oc -->|"POST /v1/chat/completions"| gw["coffee-opencode-llm gateway"]
-    gw --> decide["Level and model decision"]
+    gw --> decide["Jev: level and model decision"]
     decide -->|"level 1"| asst["assistant 1"]
     decide -->|"level 2"| expert["expert"]
     asst -->|"escalation"| expert
@@ -149,7 +148,6 @@ internal/             config, httpapi, engine, router, catalog, ledger, jev, tra
 api/openapi.yaml      contract for clients and the plugin
 config/               gateway.yaml (limits), models.yaml (catalog)
 migrations/           NNNN_name.sqlite.sql, NNNN_name.postgres.sql
-coffee_llm/           Python reference, removed after the first Go release
 ```
 
 ## Documentation

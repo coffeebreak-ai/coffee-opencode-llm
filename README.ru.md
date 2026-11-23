@@ -14,8 +14,8 @@ Thought-часть reasoning и progress-события, сохраняет за
 
 ## Статус
 
-Шлюз переписывается с Python на Go. Работа идёт в ветке `go`; `main` не трогается. Python-реализация
-хранится в `coffee_llm/` только как референс и будет удалена после первого рабочего Go-релиза.
+Шлюз написан на Go; вся текущая работа идёт в ветке `go`. Прежний Python-прототип был отдельным
+проектом и в этот репозиторий не входит.
 
 ## Как это работает
 
@@ -23,7 +23,7 @@ Thought-часть reasoning и progress-события, сохраняет за
 flowchart LR
     human["Человек"] --> oc["OpenCode (основной клиент)"]
     oc -->|"POST /v1/chat/completions"| gw["Шлюз coffee-opencode-llm"]
-    gw --> decide["Выбор уровня и модели"]
+    gw --> decide["Jev: выбор уровня и модели"]
     decide -->|"уровень 1"| asst["ассистент 1"]
     decide -->|"уровень 2"| expert["эксперт"]
     asst -->|"эскалация"| expert
@@ -145,7 +145,6 @@ internal/             config, httpapi, engine, router, catalog, ledger, jev, tra
 api/openapi.yaml      контракт для клиентов и плагина
 config/               gateway.yaml (лимиты), models.yaml (каталог)
 migrations/           NNNN_name.sqlite.sql, NNNN_name.postgres.sql
-coffee_llm/           Python-референс, удаляется после первого Go-релиза
 ```
 
 ## Документация
