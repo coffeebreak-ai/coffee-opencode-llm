@@ -258,7 +258,7 @@ func newGatewayFixtureOpts(t *testing.T, upstreamURL, modelsYAML string,
 	if err := st.Migrate(ctx, "sqlite"); err != nil {
 		t.Fatalf("migrate: %v", err)
 	}
-	if err := st.UpsertCatalog(ctx, cat.Models); err != nil {
+	if err := st.UpsertCatalog(ctx, storeRows(cat.Models)); err != nil {
 		t.Fatalf("upsert catalog: %v", err)
 	}
 	tr := transport.New(transport.Options{
@@ -905,10 +905,10 @@ func TestClientCancelStopsUpstreamAndReleasesQuota(t *testing.T) {
 		t.Fatalf("upstream calls after cancel = %d, want 1: a canceled request must not be retried", got)
 	}
 
-	one := 1
+	one := int64(1)
 	deadline := time.Now().Add(2 * time.Second)
 	for {
-		remaining, unlimited, err := gateway.store.Remaining(context.Background(), "asst-a", catalog.Quota{Day: &one})
+		remaining, unlimited, err := gateway.store.Remaining(context.Background(), "asst-a", store.Quota{Day: &one})
 		if err != nil {
 			t.Fatalf("read remaining quota: %v", err)
 		}
@@ -2100,4 +2100,30 @@ func TestModelsManifestIsAdditive(t *testing.T) {
 	if len(entry.Variants) != 5 || entry.Limit["context"] == 0 || entry.Limit["output"] == 0 {
 		t.Fatalf("variants/limit = %+v / %+v", entry.Variants, entry.Limit)
 	}
+}
+
+// storeRows maps catalog models into plain storage rows for the fixture.
+func storeRows(models []catalog.Model) []store.CatalogModel {
+	rows := make([]store.CatalogModel, 0, len(models))
+	for _, model := range models {
+		rows = append(rows, store.CatalogModel{
+			ID:             model.ID,
+			ContextTokens:  int64(model.ContextTokens),
+			MaxOutput:      int64(model.MaxOutput),
+			CostInPerMTok:  model.CostInPerMTok,
+			CostOutPerMTok: model.CostOutPerMTok,
+			QualityTier:    model.QualityTier,
+			Retention:      model.Retention,
+			QuotaGroup:     model.Quota.Group,
+			Strengths:      model.Strengths,
+			Limits:         model.Limits,
+			Enabled:        model.Enabled,
+			Roles:          model.Roles,
+			Efforts:        model.Effort,
+			Modalities:     model.Modalities,
+			Features:       model.Features,
+			Groups:         model.GroupSources,
+		})
+	}
+	return rows
 }

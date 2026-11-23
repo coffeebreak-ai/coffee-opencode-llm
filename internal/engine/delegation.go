@@ -9,6 +9,7 @@ import (
 	"time"
 	"unicode/utf8"
 
+	"github.com/coffeebreak-ai/coffee-opencode-llm/internal/adapter"
 	"github.com/coffeebreak-ai/coffee-opencode-llm/internal/catalog"
 	"github.com/coffeebreak-ai/coffee-opencode-llm/internal/router"
 	"github.com/coffeebreak-ai/coffee-opencode-llm/internal/store"
@@ -138,7 +139,7 @@ func (t *turn) continueDelegation(ctx context.Context, delegation *store.Delegat
 		return nil, fail("internal", http.StatusInternalServerError, "History is unavailable", err)
 	}
 	tools := append(filterTools(t.input.Tools, delegation.Scope, t.engine.opts.ToolScopes),
-		virtualTools(toolAssistantNeedsHelp)...)
+		virtualTools(adapter.ToolAssistantNeedsHelp)...)
 	outcome, err := t.callActor(ctx, actorHelper, model, messages, tools, false)
 	if err != nil {
 		if isNoQuota(err) || isUpstreamFailure(err) {

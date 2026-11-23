@@ -190,7 +190,7 @@ func testRouterWith(t *testing.T, models, profile string) *Router {
 	if err := st.Migrate(ctx, "sqlite"); err != nil {
 		t.Fatalf("migrate: %v", err)
 	}
-	if err := st.UpsertCatalog(ctx, cat.Models); err != nil {
+	if err := st.UpsertCatalog(ctx, storeRows(cat.Models)); err != nil {
 		t.Fatalf("upsert catalog: %v", err)
 	}
 	return New(cat, st, ledger.New(st, time.Hour.Milliseconds()), nil, Options{
@@ -207,7 +207,7 @@ func TestCandidatesExcludeExhaustedQuota(t *testing.T) {
 	if !ok {
 		t.Fatal("model-a is missing")
 	}
-	reservation, err := rt.store.Reserve(ctx, "req-1", model.ID, model.Quota)
+	reservation, err := rt.store.Reserve(ctx, "req-1", model.ID, storeQuota(model.Quota))
 	if err != nil {
 		t.Fatalf("reserve model-a: %v", err)
 	}
@@ -247,7 +247,7 @@ func exhaust(t *testing.T, rt *Router, modelID string) {
 	if !ok {
 		t.Fatalf("%s is missing", modelID)
 	}
-	reservation, err := rt.store.Reserve(ctx, "req-"+modelID, model.ID, model.Quota)
+	reservation, err := rt.store.Reserve(ctx, "req-"+modelID, model.ID, storeQuota(model.Quota))
 	if err != nil {
 		t.Fatalf("reserve %s: %v", modelID, err)
 	}
@@ -395,4 +395,48 @@ func TestCandidatesOrdering(t *testing.T) {
 			t.Fatalf("candidates = %v, want %v", got, want)
 		}
 	}
+}
+
+// storeRows maps catalog models into plain storage rows for the fixture.
+func storeRows(models []catalog.Model) []store.CatalogModel {
+	rows := make([]store.CatalogModel, 0, len(models))
+	for _, model := range models {
+		rows = append(rows, store.CatalogModel{
+			ID:             model.ID,
+			ContextTokens:  int64(model.ContextTokens),
+			MaxOutput:      int64(model.MaxOutput),
+			CostInPerMTok:  model.CostInPerMTok,
+			CostOutPerMTok: model.CostOutPerMTok,
+			QualityTier:    model.QualityTier,
+			Retention:      model.Retention,
+			QuotaGroup:     model.Quota.Group,
+			Strengths:      model.Strengths,
+			Limits:         model.Limits,
+			Enabled:        model.Enabled,
+			Roles:          model.Roles,
+			Efforts:        model.Effort,
+			Modalities:     model.Modalities,
+			Features:       model.Features,
+			Groups:         model.GroupSources,
+		})
+	}
+	return rows
+}
+
+// storeQuota maps a catalog quota into plain store fields for the fixture.
+func storeQuota(quota catalog.Quota) store.Quota {
+	return store.Quota{
+		Group: quota.Group,
+		RPM:   int64Ptr(quota.RPM),
+		Day:   int64Ptr(quota.Day),
+		Month: int64Ptr(quota.Month),
+	}
+}
+
+func int64Ptr(value *int) *int64 {
+	if value == nil {
+		return nil
+	}
+	converted := int64(*value)
+	return &converted
 }

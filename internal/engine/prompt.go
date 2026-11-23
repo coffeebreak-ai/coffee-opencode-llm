@@ -4,13 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/coffeebreak-ai/coffee-opencode-llm/internal/adapter"
 	"github.com/coffeebreak-ai/coffee-opencode-llm/internal/transport"
-)
-
-const (
-	toolGatewayAssistant   = "gateway_assistant"
-	toolAssistantNeedsHelp = "assistant_needs_expert"
-	toolQuestion           = "question"
 )
 
 type PromptOptions struct {
@@ -123,22 +118,22 @@ func virtualTools(names ...string) []transport.Tool {
 	out := make([]transport.Tool, 0, len(names))
 	for _, name := range names {
 		switch name {
-		case toolGatewayAssistant:
+		case adapter.ToolGatewayAssistant:
 			out = append(out, transport.Tool{
 				Type: "function",
 				Function: transport.ToolFunction{
-					Name:        toolGatewayAssistant,
+					Name:        adapter.ToolGatewayAssistant,
 					Description: "Default for collection: send any batch of reads, searches or multi-file inspection to the cheaper assistant. Roughly five times cheaper, and its calls never grow your context. Do a precise single read or edit yourself.",
 					Parameters: json.RawMessage(`{"type":"object","required":["task","scope"],` +
 						`"properties":{"task":{"type":"string"},"context":{"type":"string"},` +
 						`"scope":{"type":"string","enum":["search","read","external","write","full"]}}}`),
 				},
 			})
-		case toolAssistantNeedsHelp:
+		case adapter.ToolAssistantNeedsHelp:
 			out = append(out, transport.Tool{
 				Type: "function",
 				Function: transport.ToolFunction{
-					Name:        toolAssistantNeedsHelp,
+					Name:        adapter.ToolAssistantNeedsHelp,
 					Description: "Stop and hand the material to the expert with a short reason.",
 					Parameters:  json.RawMessage(`{"type":"object","required":["reason"],"properties":{"reason":{"type":"string"}}}`),
 				},

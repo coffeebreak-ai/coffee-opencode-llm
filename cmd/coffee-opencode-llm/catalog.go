@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/coffeebreak-ai/coffee-opencode-llm/internal/catalog"
+	"github.com/coffeebreak-ai/coffee-opencode-llm/internal/ledger"
 	"github.com/coffeebreak-ai/coffee-opencode-llm/internal/store"
 )
 
@@ -155,8 +156,8 @@ func availableAtText(untilMS int64) string {
 	return time.UnixMilli(untilMS).UTC().Format("2006-01-02T15:04Z")
 }
 
-func remainingText(ctx context.Context, st *store.Store, model catalog.Model) (string, error) {
-	remaining, unlimited, err := st.Remaining(ctx, model.ID, model.Quota)
+func remainingText(ctx context.Context, led *ledger.Ledger, model catalog.Model) (string, error) {
+	remaining, unlimited, err := led.Remaining(ctx, model.ID, model.Quota)
 	if err != nil {
 		return "", wrapDB(err, "read remaining quota for %s", model.ID)
 	}
@@ -193,6 +194,7 @@ func runCatalogShow(args []string) error {
 		return err
 	}
 	defer func() { _ = st.Close() }()
+	led := ledger.New(st, cfg.Limits.QuotaReserveTTLMS)
 	effective, err := readEffective(ctx, cfg, st)
 	if err != nil {
 		return err
@@ -201,7 +203,7 @@ func runCatalogShow(args []string) error {
 	if err != nil {
 		return err
 	}
-	if err := st.UpsertCatalog(ctx, cat.Models); err != nil {
+	if err := st.UpsertCatalog(ctx, catalogRows(cat.Models)); err != nil {
 		return wrapDB(err, "load catalog")
 	}
 	availability, err := st.Availability(ctx)
@@ -244,7 +246,7 @@ func runCatalogShow(args []string) error {
 			item = runtimeState
 			enabled = runtimeState.Enabled
 		}
-		remaining, err := remainingText(ctx, st, model)
+		remaining, err := remainingText(ctx, led, model)
 		if err != nil {
 			return err
 		}
@@ -336,7 +338,7 @@ func runCatalogGroup(args []string) error {
 	if err != nil {
 		return err
 	}
-	if err := st.UpsertCatalog(ctx, cat.Models); err != nil {
+	if err := st.UpsertCatalog(ctx, catalogRows(cat.Models)); err != nil {
 		return wrapDB(err, "load catalog")
 	}
 	model, ok := cat.Get(id)
@@ -453,7 +455,7 @@ func runCatalogExclude(args []string, excluded bool) error {
 	if err != nil {
 		return err
 	}
-	if err := st.UpsertCatalog(ctx, cat.Models); err != nil {
+	if err := st.UpsertCatalog(ctx, catalogRows(cat.Models)); err != nil {
 		return wrapDB(err, "load catalog")
 	}
 	if _, ok := cat.Get(id); !ok {

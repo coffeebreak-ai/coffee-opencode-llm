@@ -5,8 +5,6 @@ import (
 	"errors"
 	"path/filepath"
 	"testing"
-
-	"github.com/coffeebreak-ai/coffee-opencode-llm/internal/catalog"
 )
 
 func testStore(t *testing.T) *Store {
@@ -136,8 +134,8 @@ func TestReasoningContextMigrationPreservesRuntimeSettings(t *testing.T) {
 func TestQuotaReserveCommitRelease(t *testing.T) {
 	ctx := context.Background()
 	st := testStore(t)
-	limit := 2
-	quota := catalog.Quota{Day: &limit}
+	limit := int64(2)
+	quota := Quota{Day: &limit}
 
 	reservation, err := st.Reserve(ctx, "req-1", "model-a", quota)
 	if err != nil {

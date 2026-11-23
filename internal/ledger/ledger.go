@@ -25,7 +25,7 @@ func (l *Ledger) Reserve(ctx context.Context, requestID, modelID string, quota c
 	if _, err := l.store.ReleaseStaleReservations(ctx, l.reserveTTLMS); err != nil {
 		return nil, fmt.Errorf("clean stale reservations: %w", err)
 	}
-	return l.store.Reserve(ctx, requestID, modelID, quota)
+	return l.store.Reserve(ctx, requestID, modelID, storeQuota(quota))
 }
 
 func (l *Ledger) Commit(ctx context.Context, reservation store.Reservation) error {
@@ -37,7 +37,26 @@ func (l *Ledger) Release(ctx context.Context, reservation store.Reservation) err
 }
 
 func (l *Ledger) Remaining(ctx context.Context, modelID string, quota catalog.Quota) (int64, bool, error) {
-	return l.store.Remaining(ctx, modelID, quota)
+	return l.store.Remaining(ctx, modelID, storeQuota(quota))
+}
+
+// storeQuota maps the catalog domain quota into plain store fields: the ledger
+// owns the direction, the store stays domain-agnostic.
+func storeQuota(quota catalog.Quota) store.Quota {
+	return store.Quota{
+		Group: quota.Group,
+		RPM:   int64Ptr(quota.RPM),
+		Day:   int64Ptr(quota.Day),
+		Month: int64Ptr(quota.Month),
+	}
+}
+
+func int64Ptr(value *int) *int64 {
+	if value == nil {
+		return nil
+	}
+	converted := int64(*value)
+	return &converted
 }
 
 func (l *Ledger) CoolingUntil(ctx context.Context, modelID, group string) (int64, error) {

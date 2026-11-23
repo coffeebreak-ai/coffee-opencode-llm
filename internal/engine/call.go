@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/coffeebreak-ai/coffee-opencode-llm/internal/adapter"
 	"github.com/coffeebreak-ai/coffee-opencode-llm/internal/catalog"
 	"github.com/coffeebreak-ai/coffee-opencode-llm/internal/ledger"
 	"github.com/coffeebreak-ai/coffee-opencode-llm/internal/store"
@@ -345,7 +346,7 @@ func (t *turn) inspectVirtual(outcome *actorOutcome, allowDelegation bool) {
 	var client []transport.ToolCall
 	for _, call := range outcome.ToolCalls {
 		switch call.Function.Name {
-		case toolAssistantNeedsHelp:
+		case adapter.ToolAssistantNeedsHelp:
 			outcome.NeedsExpert = true
 			var args struct {
 				Reason string `json:"reason"`
@@ -353,7 +354,7 @@ func (t *turn) inspectVirtual(outcome *actorOutcome, allowDelegation bool) {
 			if err := json.Unmarshal([]byte(call.Function.Arguments), &args); err == nil {
 				outcome.NeedsExpertReason = args.Reason
 			}
-		case toolGatewayAssistant:
+		case adapter.ToolGatewayAssistant:
 			if !allowDelegation {
 				client = append(client, call)
 				continue
@@ -375,7 +376,7 @@ func filterClientCalls(calls []transport.ToolCall) []transport.ToolCall {
 	out := calls[:0]
 	for _, call := range calls {
 		switch call.Function.Name {
-		case toolAssistantNeedsHelp, toolGatewayAssistant:
+		case adapter.ToolAssistantNeedsHelp, adapter.ToolGatewayAssistant:
 			continue
 		default:
 			out = append(out, call)

@@ -6,11 +6,18 @@ import (
 	"errors"
 	"fmt"
 	"time"
-
-	"github.com/coffeebreak-ai/coffee-opencode-llm/internal/catalog"
 )
 
 var ErrNoQuota = errors.New("no quota")
+
+// Quota is the plain limit set of one owner. The ledger maps its own domain
+// type into these fields; the store stays domain-agnostic.
+type Quota struct {
+	Group string
+	RPM   *int64
+	Day   *int64
+	Month *int64
+}
 
 type WindowKey struct {
 	OwnerKind string
@@ -41,7 +48,7 @@ func WindowStart(kind string, now time.Time) int64 {
 	}
 }
 
-func (s *Store) Reserve(ctx context.Context, requestID, modelID string, quota catalog.Quota) (*Reservation, error) {
+func (s *Store) Reserve(ctx context.Context, requestID, modelID string, quota Quota) (*Reservation, error) {
 	now := s.now().UTC()
 	windows := buildWindows(modelID, quota, now)
 	tx, err := s.rw.BeginTx(ctx, nil)
@@ -82,27 +89,17 @@ func (s *Store) Reserve(ctx context.Context, requestID, modelID string, quota ca
 	return &Reservation{RequestID: requestID, ModelID: modelID, Group: quota.Group, Windows: windows}, nil
 }
 
-func buildWindows(modelID string, quota catalog.Quota, now time.Time) []WindowKey {
+func buildWindows(modelID string, quota Quota, now time.Time) []WindowKey {
 	var out []WindowKey
-	add := func(kind string, limit *int) {
-		var value *int64
-		if limit != nil {
-			converted := int64(*limit)
-			value = &converted
-		}
-		out = append(out, WindowKey{OwnerKind: "model", OwnerID: modelID, Kind: kind, StartMS: WindowStart(kind, now), Limit: value})
+	add := func(kind string, limit *int64) {
+		out = append(out, WindowKey{OwnerKind: "model", OwnerID: modelID, Kind: kind, StartMS: WindowStart(kind, now), Limit: limit})
 	}
 	add("rpm", quota.RPM)
 	add("day", quota.Day)
 	add("month", quota.Month)
 	if quota.Group != "" {
-		group := func(kind string, limit *int) {
-			var value *int64
-			if limit != nil {
-				converted := int64(*limit)
-				value = &converted
-			}
-			out = append(out, WindowKey{OwnerKind: "group", OwnerID: quota.Group, Kind: kind, StartMS: WindowStart(kind, now), Limit: value})
+		group := func(kind string, limit *int64) {
+			out = append(out, WindowKey{OwnerKind: "group", OwnerID: quota.Group, Kind: kind, StartMS: WindowStart(kind, now), Limit: limit})
 		}
 		group("rpm", quota.RPM)
 		group("day", quota.Day)
@@ -223,7 +220,7 @@ func (s *Store) CoolingUntil(ctx context.Context, modelID, group string) (int64,
 	return maxUntil, nil
 }
 
-func (s *Store) Remaining(ctx context.Context, modelID string, quota catalog.Quota) (int64, bool, error) {
+func (s *Store) Remaining(ctx context.Context, modelID string, quota Quota) (int64, bool, error) {
 	now := s.now().UTC()
 	windows := buildWindows(modelID, quota, now)
 	var remaining int64

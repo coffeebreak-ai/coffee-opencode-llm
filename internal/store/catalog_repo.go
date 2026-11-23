@@ -6,9 +6,28 @@ import (
 	"errors"
 	"fmt"
 	"strings"
-
-	"github.com/coffeebreak-ai/coffee-opencode-llm/internal/catalog"
 )
+
+// CatalogModel is the storage row of one catalog model. The catalog loader maps
+// its own domain type into these plain fields; the store stays domain-agnostic.
+type CatalogModel struct {
+	ID             string
+	ContextTokens  int64
+	MaxOutput      int64
+	CostInPerMTok  *float64
+	CostOutPerMTok *float64
+	QualityTier    string
+	Retention      string
+	QuotaGroup     string
+	Strengths      string
+	Limits         string
+	Enabled        bool
+	Roles          []string
+	Efforts        []string
+	Modalities     []string
+	Features       []string
+	Groups         map[string]string // group name -> source kind
+}
 
 type Availability struct {
 	ModelID         string
@@ -21,7 +40,7 @@ type Availability struct {
 	LastErrorKind   string
 }
 
-func (s *Store) UpsertCatalog(ctx context.Context, models []catalog.Model) error {
+func (s *Store) UpsertCatalog(ctx context.Context, models []CatalogModel) error {
 	tx, err := s.rw.BeginTx(ctx, nil)
 	if err != nil {
 		return fmt.Errorf("begin catalog upsert: %w", err)
@@ -60,7 +79,7 @@ func (s *Store) UpsertCatalog(ctx context.Context, models []catalog.Model) error
 			enabled = excluded.enabled,
 			updated_at_ms = excluded.updated_at_ms`,
 			model.ID, model.ContextTokens, model.MaxOutput, costIn, costOut,
-			model.QualityTier, nullString(model.Retention), nullString(model.Quota.Group),
+			model.QualityTier, nullString(model.Retention), nullString(model.QuotaGroup),
 			model.Strengths, model.Limits, enabled, now, now); err != nil {
 			return fmt.Errorf("upsert model %s: %w", model.ID, err)
 		}
@@ -75,7 +94,7 @@ func (s *Store) UpsertCatalog(ctx context.Context, models []catalog.Model) error
 				return fmt.Errorf("insert role %s for %s: %w", role, model.ID, err)
 			}
 		}
-		for _, effort := range model.Effort {
+		for _, effort := range model.Efforts {
 			if _, err := tx.ExecContext(ctx, `INSERT INTO model_effort (model_id, effort) VALUES (?, ?)`, model.ID, effort); err != nil {
 				return fmt.Errorf("insert effort %s for %s: %w", effort, model.ID, err)
 			}
@@ -90,8 +109,7 @@ func (s *Store) UpsertCatalog(ctx context.Context, models []catalog.Model) error
 				return fmt.Errorf("insert feature %s for %s: %w", feature, model.ID, err)
 			}
 		}
-		for _, group := range model.Groups {
-			source := model.GroupSources[group]
+		for group, source := range model.Groups {
 			if source == "" {
 				source = "profile"
 			}

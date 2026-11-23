@@ -72,7 +72,7 @@ func runServe(args []string) error {
 	if err != nil {
 		return err
 	}
-	if err := st.UpsertCatalog(ctx, cat.Models); err != nil {
+	if err := st.UpsertCatalog(ctx, catalogRows(cat.Models)); err != nil {
 		return wrapDB(err, "load catalog")
 	}
 

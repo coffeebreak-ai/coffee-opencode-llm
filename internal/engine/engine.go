@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/coffeebreak-ai/coffee-opencode-llm/internal/adapter"
 	"github.com/coffeebreak-ai/coffee-opencode-llm/internal/catalog"
 	"github.com/coffeebreak-ai/coffee-opencode-llm/internal/ledger"
 	"github.com/coffeebreak-ai/coffee-opencode-llm/internal/router"
@@ -502,7 +503,7 @@ func (t *turn) runAssistant(ctx context.Context) (Result, error) {
 		}
 	}
 	tools := append(append([]transport.Tool{}, t.input.Tools...),
-		virtualTools(toolAssistantNeedsHelp)...)
+		virtualTools(adapter.ToolAssistantNeedsHelp)...)
 	if t.modelCall > 0 {
 		if err := t.sink.ping(); err != nil {
 			return Result{}, fail("internal", http.StatusInternalServerError, "Client stream is unavailable", err)
@@ -771,15 +772,15 @@ func (t *turn) expertLoop(ctx context.Context, model catalog.Model) (Result, err
 func (t *turn) expertTools() []transport.Tool {
 	if !t.engine.opts.ExpertDelegationOnly {
 		return append(append([]transport.Tool{}, t.input.Tools...),
-			virtualTools(toolGatewayAssistant)...)
+			virtualTools(adapter.ToolGatewayAssistant)...)
 	}
 	tools := make([]transport.Tool, 0, 2)
 	for _, tool := range t.input.Tools {
-		if tool.Function.Name == toolQuestion {
+		if tool.Function.Name == adapter.QuestionTool {
 			tools = append(tools, tool)
 		}
 	}
-	return append(tools, virtualTools(toolGatewayAssistant)...)
+	return append(tools, virtualTools(adapter.ToolGatewayAssistant)...)
 }
 
 func (t *turn) runExpertOnly(ctx context.Context) (Result, error) {

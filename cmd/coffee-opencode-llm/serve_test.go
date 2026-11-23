@@ -101,7 +101,7 @@ func newStartupFixture(t *testing.T) *startupFixture {
 	if err := st.Migrate(ctx, "sqlite"); err != nil {
 		t.Fatalf("migrate: %v", err)
 	}
-	if err := st.UpsertCatalog(ctx, cat.Models); err != nil {
+	if err := st.UpsertCatalog(ctx, catalogRows(cat.Models)); err != nil {
 		t.Fatalf("upsert catalog: %v", err)
 	}
 	cfg := &config.Config{
