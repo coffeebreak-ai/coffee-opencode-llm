@@ -17,6 +17,11 @@ Thought-часть reasoning и progress-события, сохраняет за
 
 ![Выбор моделей ассистента и эксперта в OpenCode](assets/opencode-model-selection.gif)
 
+| Команда OpenCode | Описание |
+| --- | --- |
+| `/coffee-assistants` | Открыть выбор моделей группы `coffee-assistant`. |
+| `/coffee-experts` | Открыть выбор моделей группы `coffee-expert`. |
+
 ## Статус
 
 Шлюз написан на Go; вся текущая работа идёт в ветке `go`. Прежний Python-прототип был отдельным
@@ -129,6 +134,27 @@ go run ./cmd/coffee-opencode-llm serve -config config/gateway.yaml -models confi
 Обязательное окружение: `OPENCODE_INFERENCE_URL`, `OPENCODE_API_KEY`, `JEV_BASE_URL`, `JEV_API_KEY`.
 Секреты в файлах конфигурации не хранятся. `make run` не читает `.env`: экспортируйте переменные
 в шелле или сервис-менеджере.
+
+## Команды
+
+Запускайте команды собранным бинарём или добавляйте перед ними
+`go run ./cmd/coffee-opencode-llm`.
+
+| Команда | Описание |
+| --- | --- |
+| `serve` | Запустить HTTP-шлюз. |
+| `migrate` | Применить ожидающие миграции БД. |
+| `catalog show` | Показать модели, роли, доступность и квоты; `-json` выводит данные для программной обработки. |
+| `catalog group add/remove <group> <model-id>` | Добавить модель в группу ротации `coffee-assistant` или `coffee-expert` либо удалить из неё. |
+| `catalog enable/disable <model-id>` | Переопределить доступность модели из каталога. |
+| `catalog exclude/include <model-id>` | Вручную исключить модель из ротации или вернуть её. |
+| `settings show/set <key> [value]` | Посмотреть или изменить глобальные runtime-настройки; рестарт не нужен. |
+| `plan show/set <value>` | Посмотреть или сменить план: `free`, `go`, `go-plus` или `go-teams`. |
+| `retention` | Показать план очистки по сроку хранения; данные не удаляются. |
+
+Для применения очистки используйте `make retention-apply RETENTION_CONFIRM=yes`. Команда
+безвозвратно удаляет просроченную историю пакетами. Сначала запустите dry-run и сделайте резервную
+копию базы.
 
 Шлюз слушает `127.0.0.1:8080` по умолчанию и публикует одну модель:
 

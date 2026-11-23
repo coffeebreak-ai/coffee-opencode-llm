@@ -16,6 +16,11 @@ In OpenCode, `/coffee-assistants` and `/coffee-experts` open the corresponding m
 
 ![OpenCode assistant and expert model selectors](assets/opencode-model-selection.gif)
 
+| OpenCode command | Description |
+| --- | --- |
+| `/coffee-assistants` | Open the selector for models in the `coffee-assistant` group. |
+| `/coffee-experts` | Open the selector for models in the `coffee-expert` group. |
+
 ## Status
 
 The gateway is written in Go; all current work happens on the `go` branch. The earlier Python
@@ -131,6 +136,26 @@ go run ./cmd/coffee-opencode-llm serve -config config/gateway.yaml -models confi
 Required environment: `OPENCODE_INFERENCE_URL`, `OPENCODE_API_KEY`, `JEV_BASE_URL`, `JEV_API_KEY`.
 Secrets are never stored in configuration files. `make run` does not read `.env`: export the
 variables in your shell or service manager.
+
+## Commands
+
+Run commands through the built binary or prefix them with
+`go run ./cmd/coffee-opencode-llm`.
+
+| Command | Description |
+| --- | --- |
+| `serve` | Start the HTTP gateway. |
+| `migrate` | Apply pending database migrations. |
+| `catalog show` | List models, roles, availability and quota; use `-json` for machine-readable output. |
+| `catalog group add/remove <group> <model-id>` | Add or remove a model from `coffee-assistant` or `coffee-expert`. |
+| `catalog enable/disable <model-id>` | Override whether a catalog model is available. |
+| `catalog exclude/include <model-id>` | Manually exclude a model from or return it to rotation. |
+| `settings show/set <key> [value]` | Inspect or change global runtime settings; changes apply without restart. |
+| `plan show/set <value>` | Inspect or change the plan: `free`, `go`, `go-plus` or `go-teams`. |
+| `retention` | Dry-run the configured retention cleanup; deletes nothing. |
+
+To apply retention cleanup, use `make retention-apply RETENTION_CONFIRM=yes`. This permanently
+deletes expired history in batches. Run the dry-run first and back up the database.
 
 The gateway listens on `127.0.0.1:8080` by default and publishes one model:
 

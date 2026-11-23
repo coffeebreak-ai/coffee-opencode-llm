@@ -13,6 +13,11 @@ progress 事件，并保留其会话头。Cursor 和 Codex 通过同一个 OpenA
 
 ![在 OpenCode 中选择助手和专家模型](assets/opencode-model-selection.gif)
 
+| OpenCode 命令 | 说明 |
+| --- | --- |
+| `/coffee-assistants` | 打开 `coffee-assistant` 模型组的选择器。 |
+| `/coffee-experts` | 打开 `coffee-expert` 模型组的选择器。 |
+
 ## 状态
 
 网关由 Go 编写；所有当前工作都在 `go` 分支进行。此前的 Python 原型是另一个项目，不属于本仓库。
@@ -117,6 +122,26 @@ go run ./cmd/coffee-opencode-llm serve -config config/gateway.yaml -models confi
 
 必需的环境变量：`OPENCODE_INFERENCE_URL`、`OPENCODE_API_KEY`、`JEV_BASE_URL`、`JEV_API_KEY`。
 密钥永远不写进配置文件。`make run` 不会读取 `.env`：请在 shell 或服务管理器中导出这些变量。
+
+## 命令
+
+可以运行已构建的二进制，也可以在每条命令前加上
+`go run ./cmd/coffee-opencode-llm`。
+
+| 命令 | 说明 |
+| --- | --- |
+| `serve` | 启动 HTTP 网关。 |
+| `migrate` | 应用待执行的数据库迁移。 |
+| `catalog show` | 查看模型、角色、可用状态和配额；`-json` 输出机器可读数据。 |
+| `catalog group add/remove <group> <model-id>` | 将模型加入或移出 `coffee-assistant` / `coffee-expert` 轮换组。 |
+| `catalog enable/disable <model-id>` | 覆盖目录模型的可用状态。 |
+| `catalog exclude/include <model-id>` | 手动将模型移出轮换或恢复轮换。 |
+| `settings show/set <key> [value]` | 查看或修改全局运行时设置，无需重启。 |
+| `plan show/set <value>` | 查看或切换上游套餐：`free`、`go`、`go-plus` 或 `go-teams`。 |
+| `retention` | 预览按保留期限清理的计划；不会删除数据。 |
+
+执行清理请使用 `make retention-apply RETENTION_CONFIRM=yes`。该操作会分批永久删除过期历史。
+请先运行 dry-run 并备份数据库。
 
 网关默认监听 `127.0.0.1:8080`，对外只发布一个模型：
 
