@@ -88,13 +88,13 @@ Reasoning модели стримится в Thought-часть OpenCode нат�
 
 Настройки глобальные, хранятся в БД и применяются без рестарта:
 
-| Настройка | Значения | Смысл |
-| --- | --- | --- |
-| `objective_mode` | `balanced` `quality` `price` | что оптимизирует решающая модель |
-| `reasoning_mode` | `min` `medium` `high` `max` `client` | уровень reasoning |
-| `reasoning_context_enabled` | `off` `on` | мастер-выключатель: reasoning везде или нигде |
-| `assistant2_reasoning_enabled` | `off` `on` | reasoning помощника, экран и контекст одинаково |
-| `subscription_mode` | `free` `go` `go-plus` `go-teams` | план апстрима и base URL |
+| Настройка | Значения | По умолчанию | Смысл |
+| --- | --- | --- | --- |
+| `objective_mode` | `balanced` `quality` `price` | `balanced` | что оптимизирует решающая модель |
+| `reasoning_mode` | `min` `medium` `high` `max` `client` | `client` | уровень reasoning |
+| `reasoning_context_enabled` | `off` `on` | `off` | мастер-выключатель: reasoning везде или нигде |
+| `assistant2_reasoning_enabled` | `off` `on` | `on` | reasoning помощника, экран и контекст одинаково |
+| `subscription_mode` | `free` `go` `go-plus` `go-teams` | `free` | план апстрима и base URL |
 
 ```sh
 coffee-opencode-llm settings set reasoning_context_enabled on
@@ -112,7 +112,8 @@ go run ./cmd/coffee-opencode-llm serve -config config/gateway.yaml -models confi
 ```
 
 Обязательное окружение: `OPENCODE_INFERENCE_URL`, `OPENCODE_API_KEY`, `JEV_BASE_URL`, `JEV_API_KEY`.
-Секреты в файлах конфигурации не хранятся.
+Секреты в файлах конфигурации не хранятся. `make run` не читает `.env`: экспортируйте переменные
+в шелле или сервис-менеджере.
 
 Шлюз слушает `127.0.0.1:8080` по умолчанию и публикует одну модель:
 

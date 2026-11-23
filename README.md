@@ -90,13 +90,13 @@ and are indistinguishable to the gateway.
 
 Settings are global, stored in the database and applied without a restart:
 
-| Setting | Values | Meaning |
-| --- | --- | --- |
-| `objective_mode` | `balanced` `quality` `price` | what the decision model optimizes |
-| `reasoning_mode` | `min` `medium` `high` `max` `client` | reasoning effort |
-| `reasoning_context_enabled` | `off` `on` | master switch: reasoning everywhere, or nowhere |
-| `assistant2_reasoning_enabled` | `off` `on` | helper reasoning, same effect on screen and context |
-| `subscription_mode` | `free` `go` `go-plus` `go-teams` | upstream plan and base URL |
+| Setting | Values | Default | Meaning |
+| --- | --- | --- | --- |
+| `objective_mode` | `balanced` `quality` `price` | `balanced` | what the decision model optimizes |
+| `reasoning_mode` | `min` `medium` `high` `max` `client` | `client` | reasoning effort |
+| `reasoning_context_enabled` | `off` `on` | `off` | master switch: reasoning everywhere, or nowhere |
+| `assistant2_reasoning_enabled` | `off` `on` | `on` | helper reasoning, same effect on screen and context |
+| `subscription_mode` | `free` `go` `go-plus` `go-teams` | `free` | upstream plan and base URL |
 
 ```sh
 coffee-opencode-llm settings set reasoning_context_enabled on
@@ -115,7 +115,8 @@ go run ./cmd/coffee-opencode-llm serve -config config/gateway.yaml -models confi
 ```
 
 Required environment: `OPENCODE_INFERENCE_URL`, `OPENCODE_API_KEY`, `JEV_BASE_URL`, `JEV_API_KEY`.
-Secrets are never stored in configuration files.
+Secrets are never stored in configuration files. `make run` does not read `.env`: export the
+variables in your shell or service manager.
 
 The gateway listens on `127.0.0.1:8080` by default and publishes one model:
 

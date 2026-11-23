@@ -79,13 +79,13 @@ flowchart LR
 
 设置是全局的，保存在数据库中，无需重启即生效：
 
-| 设置 | 取值 | 含义 |
-| --- | --- | --- |
-| `objective_mode` | `balanced` `quality` `price` | 决策模型优化什么 |
-| `reasoning_mode` | `min` `medium` `high` `max` `client` | reasoning 力度 |
-| `reasoning_context_enabled` | `off` `on` | 总开关：reasoning 处处在，或处处无 |
-| `assistant2_reasoning_enabled` | `off` `on` | 助手 2 的 reasoning，屏幕与上下文一致 |
-| `subscription_mode` | `free` `go` `go-plus` `go-teams` | 上游套餐和 base URL |
+| 设置 | 取值 | 默认值 | 含义 |
+| --- | --- | --- | --- |
+| `objective_mode` | `balanced` `quality` `price` | `balanced` | 决策模型优化什么 |
+| `reasoning_mode` | `min` `medium` `high` `max` `client` | `client` | reasoning 力度 |
+| `reasoning_context_enabled` | `off` `on` | `off` | 总开关：reasoning 处处在，或处处无 |
+| `assistant2_reasoning_enabled` | `off` `on` | `on` | 助手 2 的 reasoning，屏幕与上下文一致 |
+| `subscription_mode` | `free` `go` `go-plus` `go-teams` | `free` | 上游套餐和 base URL |
 
 ```sh
 coffee-opencode-llm settings set reasoning_context_enabled on
@@ -103,7 +103,7 @@ go run ./cmd/coffee-opencode-llm serve -config config/gateway.yaml -models confi
 ```
 
 必需的环境变量：`OPENCODE_INFERENCE_URL`、`OPENCODE_API_KEY`、`JEV_BASE_URL`、`JEV_API_KEY`。
-密钥永远不写进配置文件。
+密钥永远不写进配置文件。`make run` 不会读取 `.env`：请在 shell 或服务管理器中导出这些变量。
 
 网关默认监听 `127.0.0.1:8080`，对外只发布一个模型：
 
