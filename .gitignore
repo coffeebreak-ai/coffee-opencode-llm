@@ -1,30 +1,12 @@
-.venv/
 .env
 data/
 .coffee/
 
-__pycache__/
-*.py[cod]
-.pytest_cache/
-.mypy_cache/
-.ruff_cache/
-dist/
-*.egg-info/
 .idea/
 .vscode/
 
 docs/
 tasks/
-tests/
-graphiti/
-external/
-docker-compose.yml
-CURSOR.md
-
-# Local development process, not part of the public repository
-AGENTS.md
-EXPERIENCE.md
-.opencode/
 
 # Go build and test artifacts
 bin/
@@ -41,3 +23,8 @@ coverage.*
 *.db-wal
 *.sqlite
 *.sqlite3
+
+# Local development process, not part of the public repository
+AGENTS.md
+EXPERIENCE.md
+.opencode/
