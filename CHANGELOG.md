@@ -1,5 +1,11 @@
-# Журнал
+# Changelog
 
-## Не выпущено
+## Unreleased
 
-Спецификация переведена на Graphiti как память контекста и на отдельный сервер критерия. Процесс шлюза по-прежнему предыдущий срез: локальный ответ и прокси в `gpt-6.1-sol`. Лицензия MIT.
+The Go gateway: two-level assistant/expert pipeline with client-side tool
+execution, model catalog routing with a decision solver, quota ledger,
+append-only SQLite storage with dual-dialect migrations, an opt-in
+reasoning archive behind two gates (a master switch and an assistant 2
+switch), and fail-stop history compaction that blocks the session on a
+failed summary. The Python reference stays in `coffee_llm/` until the
+first Go release.
