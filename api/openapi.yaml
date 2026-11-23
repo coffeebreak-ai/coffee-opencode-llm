@@ -1,0 +1,493 @@
+openapi: 3.1.0
+info:
+  title: Coffee LLM gateway
+  version: 1.0.0
+  description: |
+    OpenAI-compatible facade with internal expert/assistant routing.
+
+    A 502 with reason empty_answer is returned only when the adjuster is
+    unavailable. When the adjuster is available, an assistant answer that is
+    empty or fully stripped by sanitization is escalated to the expert instead
+    of failing the request; only facts (answer_suspect and the missing-part
+    flags context_missing, request_missing, answer_missing) are passed to the
+    adjuster, never the stripped text.
+
+    If history compaction fails or returns an incomplete summary, the turn
+    stops with invalid_request and asks the client to compact and retry.
+    Before streaming starts the HTTP status is 422; after streaming starts
+    the error is delivered in the SSE stream.
+
+    The configured turn-step budget applies across tool-result requests;
+    when exhausted, the gateway returns the configured pause with finish
+    reason length.
+servers:
+  - url: http://127.0.0.1:8080
+paths:
+  /v1/chat/completions:
+    post:
+      summary: Chat completions
+      parameters:
+        - name: X-Coffee-Llm-Session
+          in: header
+          schema: { type: string, maxLength: 200 }
+        - name: x-opencode-session
+          in: header
+          schema: { type: string, maxLength: 200 }
+        - name: x-opencode-client
+          in: header
+          description: OpenCode UI client kind; reasoning output is enabled only for cli, tui, or app.
+          schema: { type: string, enum: [cli, tui, app] }
+        - name: X-Request-Id
+          in: header
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ChatRequest" }
+      responses:
+        "200":
+          description: Completion or tool calls
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ChatResponse" }
+            text/event-stream:
+              schema: { $ref: "#/components/schemas/StreamChunk" }
+        "400": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+        "405": { $ref: "#/components/responses/Error" }
+        "409": { $ref: "#/components/responses/Error" }
+        "413": { $ref: "#/components/responses/Error" }
+        "422": { $ref: "#/components/responses/Error" }
+        "429": { $ref: "#/components/responses/Error" }
+        "500": { $ref: "#/components/responses/Error" }
+        "502": { $ref: "#/components/responses/Error" }
+        "503": { $ref: "#/components/responses/Error" }
+        "504": { $ref: "#/components/responses/Error" }
+  /chat/completions:
+    post:
+      summary: Alias of /v1/chat/completions
+      parameters:
+        - name: X-Coffee-Llm-Session
+          in: header
+          schema: { type: string, maxLength: 200 }
+        - name: x-opencode-session
+          in: header
+          schema: { type: string, maxLength: 200 }
+        - name: x-opencode-client
+          in: header
+          schema: { type: string }
+        - name: X-Request-Id
+          in: header
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ChatRequest" }
+      responses:
+        "200":
+          description: Completion or tool calls
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ChatResponse" }
+            text/event-stream:
+              schema: { $ref: "#/components/schemas/StreamChunk" }
+        "400": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+        "405": { $ref: "#/components/responses/Error" }
+        "409": { $ref: "#/components/responses/Error" }
+        "413": { $ref: "#/components/responses/Error" }
+        "422": { $ref: "#/components/responses/Error" }
+        "429": { $ref: "#/components/responses/Error" }
+        "500": { $ref: "#/components/responses/Error" }
+        "502": { $ref: "#/components/responses/Error" }
+        "503": { $ref: "#/components/responses/Error" }
+        "504": { $ref: "#/components/responses/Error" }
+  /v1/responses:
+    post:
+      summary: Responses adapter for Codex
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ResponsesRequest" }
+      responses:
+        "200":
+          description: Response object
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ResponsesResponse" }
+        "400": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+        "405": { $ref: "#/components/responses/Error" }
+        "409": { $ref: "#/components/responses/Error" }
+        "413": { $ref: "#/components/responses/Error" }
+        "422": { $ref: "#/components/responses/Error" }
+        "429": { $ref: "#/components/responses/Error" }
+        "500": { $ref: "#/components/responses/Error" }
+        "502": { $ref: "#/components/responses/Error" }
+        "503": { $ref: "#/components/responses/Error" }
+        "504": { $ref: "#/components/responses/Error" }
+  /responses:
+    post:
+      summary: Alias of /v1/responses
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ResponsesRequest" }
+      responses:
+        "200":
+          description: Response object
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ResponsesResponse" }
+        "400": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+        "405": { $ref: "#/components/responses/Error" }
+        "409": { $ref: "#/components/responses/Error" }
+        "413": { $ref: "#/components/responses/Error" }
+        "422": { $ref: "#/components/responses/Error" }
+        "429": { $ref: "#/components/responses/Error" }
+        "500": { $ref: "#/components/responses/Error" }
+        "502": { $ref: "#/components/responses/Error" }
+        "503": { $ref: "#/components/responses/Error" }
+        "504": { $ref: "#/components/responses/Error" }
+  /v1/models:
+    get:
+      summary: Published models
+      responses:
+        "200":
+          description: Single gateway model
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [object, data]
+                properties:
+                  object: { type: string, const: list }
+                  data:
+                    type: array
+                    items: { $ref: "#/components/schemas/Model" }
+  /healthz:
+    get:
+      summary: Readiness
+      responses:
+        "200":
+          description: Ready
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [status]
+                properties:
+                  status: { type: string, const: ok }
+        "503": { $ref: "#/components/responses/Error" }
+components:
+  responses:
+    Error:
+      description: Error envelope; 502 empty_answer is a degradation when the adjuster is unavailable.
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+      headers:
+        Retry-After:
+          schema: { type: string }
+  schemas:
+    Model:
+      type: object
+      required: [id, object, owned_by]
+      properties:
+        id: { type: string, const: coffee-opencode-llm }
+        object: { type: string, const: model }
+        owned_by: { type: string, const: coffeebreak }
+        schema_version: { type: integer, const: 1 }
+        catalog_revision: { type: string, description: Created by the gateway; consumers must not replace it }
+        updated_at_ms: { type: integer, format: int64, description: UTC milliseconds }
+        event_id: { type: string, format: uuid, description: Created by the gateway for config sync }
+        x-coffee-capabilities: { $ref: "#/components/schemas/CoffeeCapabilities" }
+        x-coffee-limit: { $ref: "#/components/schemas/CoffeeLimit" }
+        x-coffee-variants:
+          type: array
+          items: { $ref: "#/components/schemas/CoffeeVariant" }
+    CoffeeCapabilities:
+      type: object
+      required: [tools, input, output, reasoning]
+      properties:
+        tools: { type: boolean }
+        input: { type: array, items: { type: string } }
+        output: { type: array, items: { type: string } }
+        temperature: { type: boolean }
+        reasoning:
+          type: object
+          required: [supported, effort]
+          properties:
+            supported: { type: boolean, const: true }
+            effort:
+              type: array
+              items: { type: string, enum: [minimal, low, medium, high, max] }
+    CoffeeLimit:
+      type: object
+      required: [context, output]
+      properties:
+        context: { type: integer, description: tokens }
+        output: { type: integer, description: tokens }
+    CoffeeVariant:
+      type: object
+      required: [id]
+      properties:
+        id: { type: string, enum: [minimal, low, medium, high, max] }
+    Message:
+      type: object
+      description: Assistant reasoning is returned separately from answer content. Incoming reasoning fields are never forwarded directly; when reasoning context is enabled, their exact match to a Coffee archive may authorize the archived copy for model context. Reasoning command tags are removed; other angle-bracket markup is preserved.
+      required: [role]
+      properties:
+        role: { type: string, enum: [system, developer, user, assistant, tool] }
+        content:
+          oneOf:
+            - type: string
+            - type: array
+              items: { $ref: "#/components/schemas/ContentPart" }
+        reasoning_content: { type: string, description: Returned only to recognized OpenCode UI clients; incoming values only confirm an exact Coffee archive match and are never forwarded directly }
+        reasoning: { type: string, description: Accepted for compatibility; incoming values only confirm an exact Coffee archive match and are never forwarded directly }
+        reasoning_text: { type: string, description: Accepted for compatibility; incoming values only confirm an exact Coffee archive match and are never forwarded directly }
+        tool_calls:
+          type: array
+          items: { $ref: "#/components/schemas/ToolCall" }
+        tool_call_id: { type: string }
+    ContentPart:
+      type: object
+      required: [type]
+      properties:
+        type: { type: string, enum: [text, image_url, input_audio] }
+        text: { type: string }
+        image_url:
+          type: object
+          required: [url]
+          properties:
+            url: { type: string }
+            detail: { type: string }
+        input_audio:
+          type: object
+          required: [data, format]
+          properties:
+            data: { type: string }
+            format: { type: string }
+    ToolCall:
+      type: object
+      required: [id, type, function]
+      properties:
+        id: { type: string }
+        type: { type: string, const: function }
+        function:
+          type: object
+          required: [name, arguments]
+          properties:
+            name: { type: string }
+            arguments: { type: string }
+    Tool:
+      type: object
+      required: [type, function]
+      properties:
+        type: { type: string, const: function }
+        cache_control: { type: object }
+        function:
+          type: object
+          required: [name]
+          properties:
+            name: { type: string }
+            description: { type: string }
+            parameters: { type: object }
+            strict: { type: boolean }
+    Usage:
+      type: object
+      properties:
+        prompt_tokens: { type: integer }
+        completion_tokens: { type: integer }
+        total_tokens: { type: integer }
+        reasoning_tokens: { type: integer }
+        prompt_tokens_details:
+          type: object
+          properties:
+            cached_tokens: { type: integer }
+        completion_tokens_details:
+          type: object
+          properties:
+            reasoning_tokens: { type: integer }
+    UsageRow:
+      type: object
+      description: One role in the per-turn token report; absent provider fields are omitted, never zeroed
+      required: [role]
+      properties:
+        role: { type: string, enum: [assistant, expert, deflator] }
+        input_tokens: { type: integer }
+        output_tokens: { type: integer }
+        cached_tokens: { type: integer }
+        reasoning_tokens: { type: integer }
+    ChatRequest:
+      type: object
+      required: [model, messages]
+      properties:
+        model: { type: string }
+        messages:
+          description: 'Incoming messages of every role are sanitized before the upstream request: reasoning command tags and gateway service reports are removed.'
+          type: array
+          minItems: 1
+          items: { $ref: "#/components/schemas/Message" }
+        tools:
+          type: array
+          items: { $ref: "#/components/schemas/Tool" }
+        tool_choice: {}
+        stream: { type: boolean }
+        max_tokens: { type: integer }
+        max_completion_tokens: { type: integer }
+        reasoning_effort: { type: string }
+        temperature: { type: number }
+        top_p: { type: number }
+        frequency_penalty: { type: number }
+        presence_penalty: { type: number }
+        seed: { type: integer }
+        stop: {}
+        n: { type: integer }
+        response_format: { type: object }
+        parallel_tool_calls: { type: boolean }
+        metadata: { type: object }
+        user: { type: string }
+    ChatResponse:
+      type: object
+      required: [id, object, created, model, choices]
+      properties:
+        id: { type: string }
+        object: { type: string, const: chat.completion }
+        created: { type: integer }
+        model: { type: string, const: coffee-opencode-llm }
+        choices:
+          type: array
+          items:
+            type: object
+            required: [index, message, finish_reason]
+            properties:
+              index: { type: integer }
+              message: { $ref: "#/components/schemas/Message" }
+              finish_reason: { type: string, enum: [stop, tool_calls, length] }
+        usage: { $ref: "#/components/schemas/Usage" }
+        x-coffee-usage:
+          type: array
+          description: Per-role token usage of the turn for buffered responses; a field the provider did not report is omitted
+          items: { $ref: "#/components/schemas/UsageRow" }
+    StreamChunk:
+      type: object
+      description: SSE data payload for chat completions; answer text and reasoning are scrubbed of reasoning command tags
+      required: [id, object, created, model, choices]
+      properties:
+        id: { type: string }
+        object: { type: string, const: chat.completion.chunk }
+        created: { type: integer }
+        model: { type: string, const: coffee-opencode-llm }
+        choices:
+          type: array
+          items:
+            type: object
+            required: [index, delta]
+            properties:
+              index: { type: integer }
+              delta:
+                type: object
+                properties:
+                  content:
+                    type: string
+                    description: Answer text with reasoning command tags removed.
+                  reasoning_content:
+                    type: string
+                    description: Live reasoning delta from any model call; emitted only to recognized OpenCode UI clients and never stored by the gateway.
+                  tool_calls: { type: array, items: { $ref: "#/components/schemas/ToolCallDelta" } }
+              finish_reason: { type: [string, "null"], enum: [stop, tool_calls, length, null] }
+        usage: { $ref: "#/components/schemas/Usage" }
+        x-coffee-usage:
+          type: array
+          description: Per-role token usage of the turn, emitted once before the final finish_reason
+          items: { $ref: "#/components/schemas/UsageRow" }
+        x-coffee-participants:
+          type: array
+          description: Factual actors of the turn, emitted once before the final finish_reason; a deflator is reported as deflator
+          items:
+            type: object
+            required: [id, role]
+            properties:
+              id: { type: string }
+              role: { type: string, enum: [expert, assistant, deflator] }
+        x-coffee-progress:
+          type: object
+          description: Transient turn progress; never stored in message, delivery, model_call or journal_event
+          additionalProperties: false
+          required: [kind, stage, category]
+          properties:
+            kind: { type: string, enum: [transition, decision, model, deflate, wait, stop, error, warning, tool, thought, summary] }
+            stage: { type: string }
+            category: { type: string, enum: [stage, decision, delegation, deflate, model, quota, tools, error] }
+            role: { type: string, enum: [adjuster, assistant, expert, deflator] }
+            model_id: { type: string }
+            request_id: { type: string }
+            level: { type: integer, enum: [1, 2] }
+            reason: { type: string, description: reasoning_sanitized is emitted once when malformed reasoning is removed }
+            class: { type: string, enum: [command, edit, read, tool] }
+            counts:
+              type: object
+              additionalProperties: false
+              properties:
+                commands: { type: integer }
+                edits: { type: integer }
+                reads: { type: integer }
+                thoughts: { type: integer }
+                tools: { type: integer }
+    ToolCallDelta:
+      type: object
+      description: Assembled tool call of the final response; intermediate model calls are not emitted
+      properties:
+        index: { type: integer }
+        id: { type: string }
+        type: { type: string, const: function }
+        function:
+          type: object
+          properties:
+            name: { type: string }
+            arguments: { type: string }
+    ResponsesRequest:
+      type: object
+      required: [input]
+      properties:
+        model: { type: string }
+        input: {}
+        instructions: { type: string }
+        tools:
+          type: array
+          items: { type: object }
+        stream:
+          type: boolean
+          description: Ignored; the adapter always returns buffered JSON (Q3)
+        max_output_tokens: { type: integer }
+        reasoning: { type: object }
+    ResponsesResponse:
+      type: object
+      description: A stored delivery is sanitized on replay without rewriting the stored row.
+      required: [id, object, status, output]
+      properties:
+        id: { type: string }
+        object: { type: string, const: response }
+        status: { type: string, const: completed }
+        output:
+          type: array
+          items: { type: object }
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [message, type, code]
+          properties:
+            message: { type: string }
+            type: { type: string }
+            code: { type: string }
+            param: { type: [string, "null"] }

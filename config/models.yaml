@@ -1,0 +1,757 @@
+upstream:
+  base_url_env: OPENCODE_INFERENCE_URL
+  key_env: OPENCODE_API_KEY
+
+defaults:
+  expert: minimax-m3.1-flash-free
+  assistant: longcat-2.5-free
+  scope: full
+
+quota_profiles:
+  go:
+    kimi-k3: { group: opencode-go, day: 98, month: null, rpm: null }
+    deepseek-v4-pro: { group: opencode-go, day: 1040, month: null, rpm: null }
+    deepseek-v4.1-flash: { group: opencode-go, day: 43300, month: null, rpm: null }
+    gpt-6-luna: { group: opencode-go, day: 4230, month: null, rpm: null }
+  go-plus:
+    kimi-k3: { group: opencode-go-plus, day: 392, month: null, rpm: null }
+    deepseek-v4-pro: { group: opencode-go-plus, day: 4180, month: null, rpm: null }
+    deepseek-v4.1-flash: { group: opencode-go-plus, day: 86700, month: null, rpm: null }
+    gpt-6-luna: { group: opencode-go-plus, day: 8200, month: null, rpm: null }
+  go-teams:
+    kimi-k3: { group: opencode-go-teams, day: 392, month: null, rpm: null }
+    deepseek-v4-pro: { group: opencode-go-teams, day: 4180, month: null, rpm: null }
+    deepseek-v4.1-flash: { group: opencode-go-teams, day: 86700, month: null, rpm: null }
+    gpt-6-luna: { group: opencode-go-teams, day: 8200, month: null, rpm: null }
+
+models:
+  - id: minimax-m3.1-flash-free
+    roles: [expert, assistant]
+    groups: [coffee-expert, coffee-assistant]
+    context_tokens: 1000000
+    max_output_tokens: 512000
+    effort: [low, medium, high, max]
+    modalities: [text, image]
+    features: [tools]
+    cost_in_per_mtok: 0
+    cost_out_per_mtok: 0
+    quality_tier: high
+    retention: zero
+    quota: { group: opencode-free, day: null, month: null, rpm: null }
+    strengths: "long context, multi-step synthesis, stable on long histories"
+    limits: "request limit is not published"
+    enabled: true
+
+  - id: deepseek-v4.1-flash-free
+    roles: [expert, assistant]
+    groups: [coffee-expert, coffee-assistant]
+    context_tokens: 200000
+    max_output_tokens: 32000
+    effort: [low, high, max]
+    modalities: [text, image]
+    features: [tools]
+    cost_in_per_mtok: 0
+    cost_out_per_mtok: 0
+    quality_tier: high
+    retention: zero
+    quota: { group: opencode-free, day: null, month: null, rpm: null }
+    strengths: "strong reasoning, concise output, good at code review"
+    limits: "smaller context window than minimax"
+    enabled: true
+
+  - id: glm-5.3-flash-free
+    roles: [expert, assistant]
+    groups: [coffee-expert]
+    context_tokens: 200000
+    max_output_tokens: 32000
+    effort: [low, high, max]
+    modalities: [text, image]
+    features: [tools]
+    cost_in_per_mtok: 0
+    cost_out_per_mtok: 0
+    quality_tier: medium
+    retention: zero
+    quota: { group: opencode-free, day: null, month: null, rpm: null }
+    strengths: "reliable structured answers, good instruction following"
+    limits: "avoid very long multi-document synthesis"
+    enabled: true
+
+  - id: longcat-2.5-free
+    roles: [assistant]
+    groups: [coffee-assistant]
+    context_tokens: 1000000
+    max_output_tokens: 262144
+    effort: []
+    modalities: [text]
+    features: [tools]
+    cost_in_per_mtok: 0
+    cost_out_per_mtok: 0
+    quality_tier: low
+    retention: zero
+    quota: { group: opencode-free, day: 100, month: null, rpm: null }
+    strengths: "cheap data collection, fast short answers"
+    limits: "100 requests per day, no images"
+    enabled: true
+
+  - id: mimo-v2.6-flash-free
+    roles: [assistant]
+    groups: [coffee-assistant]
+    context_tokens: 200000
+    max_output_tokens: 32000
+    effort: []
+    modalities: [text, image]
+    features: [tools]
+    cost_in_per_mtok: 0
+    cost_out_per_mtok: 0
+    quality_tier: low
+    retention: zero
+    quota: { group: opencode-free, day: null, month: null, rpm: null }
+    strengths: "fast tool calls, accepts images"
+    limits: "shallow synthesis"
+    enabled: true
+
+  - id: iceman-free
+    roles: [assistant]
+    groups: [coffee-assistant]
+    context_tokens: 262144
+    max_output_tokens: 131072
+    effort: []
+    modalities: [text]
+    features: [tools]
+    cost_in_per_mtok: 0
+    cost_out_per_mtok: 0
+    quality_tier: medium
+    retention: zero
+    quota: { group: opencode-free, day: null, month: null, rpm: null }
+    strengths: "steady summaries and extraction"
+    limits: "no images, limited context"
+    enabled: true
+
+  - id: inkling-2-small-free
+    roles: [assistant]
+    groups: [coffee-assistant]
+    context_tokens: 1048576
+    max_output_tokens: 131072
+    effort: [minimal, low, medium, high, max]
+    modalities: [text]
+    features: [tools]
+    cost_in_per_mtok: 0
+    cost_out_per_mtok: 0
+    quality_tier: medium
+    retention: zero
+    quota: { group: opencode-free, day: null, month: null, rpm: null }
+    strengths: "very long context for reading large logs"
+    limits: "no images"
+    enabled: true
+
+  - id: beam-free
+    roles: [expert, assistant]
+    groups: [coffee-expert, coffee-assistant]
+    context_tokens: 1048576
+    max_output_tokens: 131072
+    effort: [low, medium, high, max]
+    modalities: [text]
+    features: [tools]
+    cost_in_per_mtok: 0
+    cost_out_per_mtok: 0
+    quality_tier: medium
+    retention: zero
+    quota: { group: opencode-free, day: null, month: null, rpm: null }
+    strengths: "unlimited quota, long context, dependable tool use"
+    limits: "no images"
+    enabled: true
+
+  - id: flint-40b-free
+    roles: [assistant]
+    groups: [coffee-assistant]
+    context_tokens: 262144
+    max_output_tokens: 65536
+    effort: [low, medium, high, max]
+    modalities: [text]
+    features: [tools]
+    cost_in_per_mtok: 0
+    cost_out_per_mtok: 0
+    quality_tier: low
+    retention: zero
+    quota: { group: opencode-free, day: null, month: null, rpm: null }
+    strengths: "small and quick for narrow tasks"
+    limits: "no images, weaker reasoning"
+    enabled: true
+
+  - id: nemotron-3.5-super-vl-free
+    roles: [expert, assistant]
+    groups: [coffee-expert]
+    context_tokens: 1048576
+    max_output_tokens: 131072
+    effort: [minimal, low, medium, high, max]
+    modalities: [text, image]
+    features: [tools]
+    cost_in_per_mtok: 0
+    cost_out_per_mtok: 0
+    quality_tier: high
+    retention: zero
+    quota: { group: opencode-free, day: null, month: null, rpm: null }
+    strengths: "vision input, long context, careful analysis"
+    limits: "slower on long outputs"
+    enabled: true
+
+  - id: nemotron-3.5-lightning-free
+    roles: [assistant]
+    groups: [coffee-assistant]
+    context_tokens: 262144
+    max_output_tokens: 262144
+    effort: []
+    modalities: [text]
+    features: [tools]
+    cost_in_per_mtok: 0
+    cost_out_per_mtok: 0
+    quality_tier: low
+    retention: zero
+    quota: { group: opencode-free, day: null, month: null, rpm: null }
+    strengths: "fast, large output budget"
+    limits: "no images"
+    enabled: true
+
+  - id: big-pickle
+    roles: [assistant]
+    groups: [coffee-assistant]
+    context_tokens: 200000
+    max_output_tokens: 32000
+    effort: []
+    modalities: [text]
+    features: [tools]
+    cost_in_per_mtok: 0
+    cost_out_per_mtok: 0
+    quality_tier: low
+    retention: zero
+    quota: { group: opencode-free, day: null, month: null, rpm: null }
+    strengths: "simple text transformations"
+    limits: "narrow context, no images"
+    enabled: true
+
+  - id: hy4-flash-free
+    roles: [assistant]
+    groups: [coffee-assistant]
+    context_tokens: 1048576
+    max_output_tokens: 65536
+    effort: [minimal, high]
+    modalities: [text, image]
+    features: [tools]
+    cost_in_per_mtok: 0
+    cost_out_per_mtok: 0
+    quality_tier: medium
+    retention: zero
+    quota: { group: opencode-free, day: null, month: null, rpm: null }
+    strengths: "long context with image input"
+    limits: "coarse effort control"
+    enabled: true
+
+  - id: kimi-k3
+    roles: [expert, assistant]
+    groups: [coffee-expert]
+    context_tokens: 256000
+    max_output_tokens: 131072
+    effort: [low, medium, high, max]
+    modalities: [text, image]
+    features: [tools]
+    cost_in_per_mtok: 0.6
+    cost_out_per_mtok: 2.4
+    quality_tier: high
+    retention: zero
+    quota: { group: opencode-go, day: 98, month: null, rpm: null }
+    strengths: "top-tier reasoning and code synthesis"
+    limits: "paid model, enable explicitly in config/experts.yaml"
+    enabled: false
+
+  - id: deepseek-v4-pro
+    roles: [expert, assistant]
+    groups: [coffee-expert]
+    context_tokens: 400000
+    max_output_tokens: 131072
+    effort: [low, medium, high, max]
+    modalities: [text]
+    features: [tools]
+    cost_in_per_mtok: 0.4
+    cost_out_per_mtok: 1.6
+    quality_tier: high
+    retention: zero
+    quota: { group: opencode-go, day: 1040, month: null, rpm: null }
+    strengths: "deep technical analysis"
+    limits: "paid model, enable explicitly in config/experts.yaml"
+    enabled: false
+
+  - id: deepseek-v4.1-flash
+    roles: [expert, assistant]
+    groups: []
+    context_tokens: 200000
+    max_output_tokens: 32000
+    effort: [low, high, max]
+    modalities: [text, image]
+    features: [tools]
+    cost_in_per_mtok: null
+    cost_out_per_mtok: null
+    quality_tier: high
+    retention: zero
+    quota: { group: opencode-go, day: 43300, month: null, rpm: null }
+    strengths: "strong reasoning and concise output, included in OpenCode Go"
+    limits: "paid plan, enable explicitly in config/experts.yaml"
+    enabled: false
+
+  - id: gpt-6-luna
+    roles: [expert]
+    groups: [coffee-expert]
+    context_tokens: 400000
+    max_output_tokens: 131072
+    effort: [low, medium, high, max]
+    modalities: [text, image]
+    features: [tools]
+    cost_in_per_mtok: 0.5
+    cost_out_per_mtok: 2
+    quality_tier: high
+    retention: zero
+    quota: { group: opencode-go, day: 4230, month: null, rpm: null }
+    strengths: "careful planning and long final answers"
+    limits: "paid model, enable explicitly in config/experts.yaml"
+    enabled: false
+
+  - id: claude-haiku-5-5
+    roles: [expert, assistant]
+    groups: []
+    context_tokens: 1000000
+    max_output_tokens: 128000
+    effort: []
+    modalities: [text, image]
+    features: [tools]
+    cost_in_per_mtok: null
+    cost_out_per_mtok: null
+    quality_tier: high
+    retention: zero
+    quota: { group: opencode-go, day: 3850, month: null, rpm: null }
+    strengths: "Claude Haiku 5.5"
+    limits: "paid model, enable explicitly in config/experts.yaml"
+    enabled: false
+
+  - id: claude-opus-5-5
+    roles: [expert, assistant]
+    groups: []
+    context_tokens: 200000
+    max_output_tokens: 32000
+    effort: []
+    modalities: [text]
+    features: [tools]
+    cost_in_per_mtok: null
+    cost_out_per_mtok: null
+    quality_tier: high
+    retention: zero
+    quota: { group: opencode-go, day: null, month: null, rpm: null }
+    strengths: "claude-opus-5-5"
+    limits: "paid model, enable explicitly in config/experts.yaml"
+    enabled: false
+
+  - id: claude-sonnet-5-5
+    roles: [expert, assistant]
+    groups: []
+    context_tokens: 200000
+    max_output_tokens: 32000
+    effort: []
+    modalities: [text]
+    features: [tools]
+    cost_in_per_mtok: null
+    cost_out_per_mtok: null
+    quality_tier: high
+    retention: zero
+    quota: { group: opencode-go, day: null, month: null, rpm: null }
+    strengths: "claude-sonnet-5-5"
+    limits: "paid model, enable explicitly in config/experts.yaml"
+    enabled: false
+
+  - id: gemini-3.5-flash-lite
+    roles: [expert, assistant]
+    groups: []
+    context_tokens: 200000
+    max_output_tokens: 32000
+    effort: []
+    modalities: [text]
+    features: [tools]
+    cost_in_per_mtok: null
+    cost_out_per_mtok: null
+    quality_tier: high
+    retention: zero
+    quota: { group: opencode-go, day: null, month: null, rpm: null }
+    strengths: "gemini-3.5-flash-lite"
+    limits: "paid model, enable explicitly in config/experts.yaml"
+    enabled: false
+
+  - id: gemini-3.8-flash
+    roles: [expert, assistant]
+    groups: []
+    context_tokens: 200000
+    max_output_tokens: 32000
+    effort: []
+    modalities: [text]
+    features: [tools]
+    cost_in_per_mtok: null
+    cost_out_per_mtok: null
+    quality_tier: high
+    retention: zero
+    quota: { group: opencode-go, day: null, month: null, rpm: null }
+    strengths: "gemini-3.8-flash"
+    limits: "paid model, enable explicitly in config/experts.yaml"
+    enabled: false
+
+  - id: gemini-4-argon
+    roles: [expert, assistant]
+    groups: []
+    context_tokens: 1048576
+    max_output_tokens: 65536
+    effort: []
+    modalities: [text, image]
+    features: [tools]
+    cost_in_per_mtok: null
+    cost_out_per_mtok: null
+    quality_tier: high
+    retention: zero
+    quota: { group: opencode-go, day: 566, month: null, rpm: null }
+    strengths: "Gemini 4 Argon"
+    limits: "paid model, enable explicitly in config/experts.yaml"
+    enabled: false
+
+  - id: glm-5.3
+    roles: [expert, assistant]
+    groups: []
+    context_tokens: 1000000
+    max_output_tokens: 131072
+    effort: []
+    modalities: [text]
+    features: [tools]
+    cost_in_per_mtok: null
+    cost_out_per_mtok: null
+    quality_tier: high
+    retention: zero
+    quota: { group: opencode-go, day: 198, month: null, rpm: null }
+    strengths: "GLM-5.3"
+    limits: "paid model, enable explicitly in config/experts.yaml"
+    enabled: false
+
+  - id: glm-5.3-flash
+    roles: [expert, assistant]
+    groups: []
+    context_tokens: 1000000
+    max_output_tokens: 131072
+    effort: []
+    modalities: [text, image]
+    features: [tools]
+    cost_in_per_mtok: null
+    cost_out_per_mtok: null
+    quality_tier: high
+    retention: zero
+    quota: { group: opencode-go, day: 6320, month: null, rpm: null }
+    strengths: "GLM-5.3-Flash"
+    limits: "paid model, enable explicitly in config/experts.yaml"
+    enabled: false
+
+  - id: gpt-5.3-codex
+    roles: [expert, assistant]
+    groups: []
+    context_tokens: 200000
+    max_output_tokens: 32000
+    effort: []
+    modalities: [text]
+    features: [tools]
+    cost_in_per_mtok: null
+    cost_out_per_mtok: null
+    quality_tier: high
+    retention: zero
+    quota: { group: opencode-go, day: null, month: null, rpm: null }
+    strengths: "gpt-5.3-codex"
+    limits: "paid model, enable explicitly in config/experts.yaml"
+    enabled: false
+
+  - id: gpt-5.3-codex-spark
+    roles: [expert, assistant]
+    groups: []
+    context_tokens: 200000
+    max_output_tokens: 32000
+    effort: []
+    modalities: [text]
+    features: [tools]
+    cost_in_per_mtok: null
+    cost_out_per_mtok: null
+    quality_tier: high
+    retention: zero
+    quota: { group: opencode-go, day: null, month: null, rpm: null }
+    strengths: "gpt-5.3-codex-spark"
+    limits: "paid model, enable explicitly in config/experts.yaml"
+    enabled: false
+
+  - id: gpt-5.4-mini
+    roles: [expert, assistant]
+    groups: []
+    context_tokens: 200000
+    max_output_tokens: 32000
+    effort: []
+    modalities: [text]
+    features: [tools]
+    cost_in_per_mtok: null
+    cost_out_per_mtok: null
+    quality_tier: high
+    retention: zero
+    quota: { group: opencode-go, day: null, month: null, rpm: null }
+    strengths: "gpt-5.4-mini"
+    limits: "paid model, enable explicitly in config/experts.yaml"
+    enabled: false
+
+  - id: gpt-5.4-nano
+    roles: [expert, assistant]
+    groups: []
+    context_tokens: 200000
+    max_output_tokens: 32000
+    effort: []
+    modalities: [text]
+    features: [tools]
+    cost_in_per_mtok: null
+    cost_out_per_mtok: null
+    quality_tier: high
+    retention: zero
+    quota: { group: opencode-go, day: null, month: null, rpm: null }
+    strengths: "gpt-5.4-nano"
+    limits: "paid model, enable explicitly in config/experts.yaml"
+    enabled: false
+
+  - id: gpt-6.1-sol
+    roles: [expert, assistant]
+    groups: []
+    context_tokens: 200000
+    max_output_tokens: 32000
+    effort: []
+    modalities: [text]
+    features: [tools]
+    cost_in_per_mtok: null
+    cost_out_per_mtok: null
+    quality_tier: high
+    retention: zero
+    quota: { group: opencode-go, day: null, month: null, rpm: null }
+    strengths: "gpt-6.1-sol"
+    limits: "paid model, enable explicitly in config/experts.yaml"
+    enabled: false
+
+  - id: gpt-5.6-terra
+    roles: [expert, assistant]
+    groups: []
+    context_tokens: 200000
+    max_output_tokens: 32000
+    effort: []
+    modalities: [text]
+    features: [tools]
+    cost_in_per_mtok: null
+    cost_out_per_mtok: null
+    quality_tier: high
+    retention: zero
+    quota: { group: opencode-go, day: null, month: null, rpm: null }
+    strengths: "gpt-5.6-terra"
+    limits: "paid model, enable explicitly in config/experts.yaml"
+    enabled: false
+
+  - id: grok-4.7
+    roles: [expert, assistant]
+    groups: []
+    context_tokens: 500000
+    max_output_tokens: 500000
+    effort: []
+    modalities: [text, image]
+    features: [tools]
+    cost_in_per_mtok: null
+    cost_out_per_mtok: null
+    quality_tier: high
+    retention: zero
+    quota: { group: opencode-go, day: 169, month: null, rpm: null }
+    strengths: "Grok 4.7"
+    limits: "paid model, enable explicitly in config/experts.yaml"
+    enabled: false
+
+  - id: grok-build-0.1
+    roles: [expert, assistant]
+    groups: []
+    context_tokens: 200000
+    max_output_tokens: 32000
+    effort: []
+    modalities: [text]
+    features: [tools]
+    cost_in_per_mtok: null
+    cost_out_per_mtok: null
+    quality_tier: high
+    retention: zero
+    quota: { group: opencode-go, day: null, month: null, rpm: null }
+    strengths: "grok-build-0.1"
+    limits: "paid model, enable explicitly in config/experts.yaml"
+    enabled: false
+
+  - id: kimi-k2.7-code
+    roles: [expert, assistant]
+    groups: []
+    context_tokens: 262144
+    max_output_tokens: 262144
+    effort: []
+    modalities: [text, image]
+    features: [tools]
+    cost_in_per_mtok: null
+    cost_out_per_mtok: null
+    quality_tier: high
+    retention: zero
+    quota: { group: opencode-go, day: 994, month: null, rpm: null }
+    strengths: "Kimi K2.7 Code"
+    limits: "paid model, enable explicitly in config/experts.yaml"
+    enabled: false
+
+  - id: minimax-m3
+    roles: [expert, assistant]
+    groups: []
+    context_tokens: 1000000
+    max_output_tokens: 131072
+    effort: []
+    modalities: [text, image]
+    features: [tools]
+    cost_in_per_mtok: null
+    cost_out_per_mtok: null
+    quality_tier: high
+    retention: zero
+    quota: { group: opencode-go, day: 3210, month: null, rpm: null }
+    strengths: "MiniMax-M3"
+    limits: "paid model, enable explicitly in config/experts.yaml"
+    enabled: false
+
+  - id: muse-wonder-1.0
+    roles: [expert, assistant]
+    groups: []
+    context_tokens: 200000
+    max_output_tokens: 32000
+    effort: []
+    modalities: [text]
+    features: [tools]
+    cost_in_per_mtok: null
+    cost_out_per_mtok: null
+    quality_tier: high
+    retention: zero
+    quota: { group: opencode-go, day: null, month: null, rpm: null }
+    strengths: "muse-wonder-1.0"
+    limits: "paid model, enable explicitly in config/experts.yaml"
+    enabled: false
+
+  - id: mistral-large-4
+    roles: [expert, assistant]
+    groups: []
+    context_tokens: 200000
+    max_output_tokens: 32000
+    effort: []
+    modalities: [text]
+    features: [tools]
+    cost_in_per_mtok: null
+    cost_out_per_mtok: null
+    quality_tier: high
+    retention: zero
+    quota: { group: opencode-go, day: null, month: null, rpm: null }
+    strengths: "mistral-large-4"
+    limits: "paid model, enable explicitly in config/experts.yaml"
+    enabled: false
+
+  - id: qwen3.8-flash
+    roles: [expert, assistant]
+    groups: []
+    context_tokens: 1000000
+    max_output_tokens: 131072
+    effort: []
+    modalities: [text, image]
+    features: [tools]
+    cost_in_per_mtok: null
+    cost_out_per_mtok: null
+    quality_tier: high
+    retention: zero
+    quota: { group: opencode-go, day: 5400, month: null, rpm: null }
+    strengths: "Qwen3.8 Flash"
+    limits: "paid model, enable explicitly in config/experts.yaml"
+    enabled: false
+
+  - id: muse-ember-1.0
+    roles: [expert, assistant]
+    groups: []
+    context_tokens: 200000
+    max_output_tokens: 32000
+    effort: []
+    modalities: [text]
+    features: [tools]
+    cost_in_per_mtok: null
+    cost_out_per_mtok: null
+    quality_tier: high
+    retention: zero
+    quota: { group: opencode-go, day: null, month: null, rpm: null }
+    strengths: "muse-ember-1.0"
+    limits: "paid model, enable explicitly in config/experts.yaml"
+    enabled: false
+
+  - id: gemini-4-carbon
+    roles: [expert, assistant]
+    groups: []
+    context_tokens: 200000
+    max_output_tokens: 32000
+    effort: []
+    modalities: [text]
+    features: [tools]
+    cost_in_per_mtok: null
+    cost_out_per_mtok: null
+    quality_tier: high
+    retention: zero
+    quota: { group: opencode-go, day: null, month: null, rpm: null }
+    strengths: "gemini-4-carbon"
+    limits: "paid model, enable explicitly in config/experts.yaml"
+    enabled: false
+
+  - id: gemini-4-hydrogen
+    roles: [expert, assistant]
+    groups: []
+    context_tokens: 200000
+    max_output_tokens: 32000
+    effort: []
+    modalities: [text]
+    features: [tools]
+    cost_in_per_mtok: null
+    cost_out_per_mtok: null
+    quality_tier: high
+    retention: zero
+    quota: { group: opencode-go, day: null, month: null, rpm: null }
+    strengths: "gemini-4-hydrogen"
+    limits: "paid model, enable explicitly in config/experts.yaml"
+    enabled: false
+
+  - id: gpt-6.2-sol
+    roles: [expert, assistant]
+    groups: []
+    context_tokens: 200000
+    max_output_tokens: 32000
+    effort: []
+    modalities: [text]
+    features: [tools]
+    cost_in_per_mtok: null
+    cost_out_per_mtok: null
+    quality_tier: high
+    retention: zero
+    quota: { group: opencode-go, day: null, month: null, rpm: null }
+    strengths: "gpt-6.2-sol"
+    limits: "paid model, enable explicitly in config/experts.yaml"
+    enabled: false
+
+  - id: gpt-6.2-astra
+    roles: [expert, assistant]
+    groups: []
+    context_tokens: 200000
+    max_output_tokens: 32000
+    effort: []
+    modalities: [text]
+    features: [tools]
+    cost_in_per_mtok: null
+    cost_out_per_mtok: null
+    quality_tier: high
+    retention: zero
+    quota: { group: opencode-go, day: null, month: null, rpm: null }
+    strengths: "gpt-6.2-astra"
+    limits: "paid model, enable explicitly in config/experts.yaml"
+    enabled: false

@@ -1,0 +1,10 @@
+# User labels on top of config/models.yaml. The gateway never rewrites this file.
+# Lists add labels; removing a profile label is a command:
+#   coffee-opencode-llm catalog group remove coffee-expert <id>
+
+coffee-expert: []
+coffee-assistant: []
+
+# Paid models are disabled in the default profile. List an id here to enable it.
+enabled: []
+disabled: []

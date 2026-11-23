@@ -1,0 +1,134 @@
+# Every key is required: a missing key or an unknown key stops the gateway.
+# Environment overrides use the upper-case key name, for example MAX_REQUEST_BYTES.
+
+port: 8080
+data_path: ./data
+log_level: info
+public_model: coffee-opencode-llm
+pause_phrase: "\n\n[coffee-opencode-llm] Output limit reached. Send a follow-up message to continue.\n"
+
+proxy: 0
+output_limit_mode: client_first
+objective_mode: balanced
+reasoning_mode: client
+reasoning_context_enabled: 0
+reasoning_trace_scope: full
+subscription_mode: free
+
+progress_texts:
+  transition: "{stage}"
+  decision: "{stage}: {reason}"
+  model: "{stage}: {role} {model_id} {reason}"
+  deflate: "{stage}: {reason}"
+  wait: "{stage}: waiting for client tools"
+  stop: "{stage}: {reason}"
+  error: "{stage}: {reason}"
+  warning: "Warning: {reason}"
+  tool: "{class}: {reason}"
+  thought: "thinking ({role})"
+  summary: "turn: commands {commands}, edits {edits}, reads {reads}, thoughts {thoughts}, tools {tools}"
+
+progress_tool_classes:
+  bash: command
+  edit: edit
+  write: edit
+  read: read
+  grep: read
+  glob: read
+  webfetch: read
+
+limits:
+  max_request_bytes: 8000000
+  max_upstream_response_bytes: 32000000
+  connect_timeout_ms: 5000
+  upstream_timeout_ms: 120000
+  client_total_timeout_ms: 600000
+  client_tools_timeout_ms: 120000
+  retry_attempts: 2
+  retry_backoff_ms: 300
+  retry_after_max_ms: 3600000
+
+  stream_first_chunk_timeout_ms: 30000
+  stream_idle_timeout_ms: 60000
+  stream_max_chunk_bytes: 1048576
+  stream_flush_each_chunk: 1
+  stream_write_timeout_ms: 15000
+  stream_text_scope: final
+
+  progress_enabled: 1
+  progress_stage_enabled: 1
+  progress_decision_enabled: 1
+  progress_delegation_enabled: 1
+  progress_deflate_enabled: 1
+  progress_model_enabled: 1
+  progress_quota_enabled: 1
+  progress_tools_enabled: 1
+  progress_error_enabled: 1
+  progress_min_interval_ms: 200
+  progress_max_events: 128
+  progress_text_chars: 200
+  progress_include_request_id: 0
+
+  max_gateway_turns: 32
+  max_delegation_steps: 8
+  max_output_tokens: 131072
+  compact_packet_chars: 24000
+  compact_evidence_chars: 8000
+  deflate_threshold_chars: 2000
+  deflate_min_confidence_pct: 50
+  deflator_reasoning_tokens: 4096
+  expert_delegation_only: 1
+  history_compact_pct: 80
+  history_summary_pct: 15
+  chars_per_token: 3
+  max_tools: 128
+  max_message_chars: 2000000
+  max_media_part_bytes: 20000000
+  objective_balance_window_turns: 8
+
+  jev_timeout_ms: 120000
+  jev_state_chars: 48000
+  jev_input_tokens: 24000
+  jev_bytes_per_token: 2
+  jev_criteria_chars: 24000
+  jev_max_questions: 4
+  jev_max_calls_per_turn: 32
+  jev_min_confidence_pct: 45
+  jev_retry_attempts: 1
+
+  quota_reserve_ttl_ms: 180000
+  quota_429_cooldown_ms: 3600000
+  session_idle_ttl_hours: 72
+  rotation_cooldown_ms: 600000
+  rotation_error_threshold: 3
+  dialogue_lock_wait_ms: 5000
+
+  db_busy_timeout_ms: 5000
+  db_max_open_conns: 4
+  db_max_idle_conns: 2
+  db_write_conns: 1
+  retention_days: 30
+  startup_smoke: 1
+  smoke_disable_ms: 3600000
+  smoke_max_tokens: 16
+  http_read_header_timeout_ms: 10000
+  http_idle_timeout_ms: 120000
+  http_shutdown_timeout_ms: 30000
+
+upstream:
+  base_url_env: OPENCODE_INFERENCE_URL
+  key_env: OPENCODE_API_KEY
+  session_header: x-opencode-session
+
+jev:
+  base_url_env: JEV_BASE_URL
+  key_env: JEV_API_KEY
+  model_env: ADJUSTER_JEV_MODEL
+
+# Tool names are matched exactly. A tool that is not listed here belongs only
+# to the full scope.
+tool_scopes:
+  search: [grep, glob, read]
+  read: [grep, glob, read, webfetch]
+  external: [grep, glob, read, webfetch]
+  write: [grep, glob, read, webfetch, edit, write, bash]

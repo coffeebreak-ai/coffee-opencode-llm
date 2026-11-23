@@ -1,0 +1,599 @@
+version: "2"
+run:
+  issues-exit-code: 1
+  tests: true
+linters:
+  default: none
+  enable:
+    - asasalint
+    - bidichk
+    - copyloopvar
+    - depguard
+    - dogsled
+    - dupl
+    - dupword
+    - errcheck
+    - errorlint
+    - exhaustive
+    - exhaustruct
+    - forbidigo
+    - gocognit
+    - gocritic
+    - gocyclo
+    - godot
+    - godox
+    - gomoddirectives
+    - gomodguard_v2
+    - gosec
+    - gosmopolitan
+    - govet
+    - importas
+    - inamedparam
+    - ineffassign
+    - mnd
+    - musttag
+    - nakedret
+    - nestif
+    - nilnil
+    - nolintlint
+    - nonamedreturns
+    - paralleltest
+    - predeclared
+    - promlinter
+    - revive
+    - rowserrcheck
+    - spancheck
+    - staticcheck
+    - tagalign
+    - testifylint
+    - testpackage
+    - unconvert
+    - unparam
+    - unused
+    - usestdlibvars
+  settings:
+    asasalint:
+      exclude:
+        - Append
+        - \.Wrapf
+      use-builtin-exclusions: false
+    bidichk:
+      left-to-right-embedding: false
+      right-to-left-embedding: false
+      pop-directional-formatting: false
+      left-to-right-override: false
+      right-to-left-override: false
+      left-to-right-isolate: false
+      right-to-left-isolate: false
+      first-strong-isolate: false
+      pop-directional-isolate: false
+    copyloopvar:
+      check-alias: true
+    depguard:
+      rules:
+        main:
+          list-mode: lax
+          files:
+            - $all
+          allow:
+            - $gostd
+            - github.com/coffeebreak-ai/coffee-opencode-llm
+            - github.com/go-chi/chi/v5
+            - gopkg.in/yaml.v3
+            - modernc.org/sqlite
+          deny:
+            - pkg: github.com/sirupsen/logrus
+              desc: use log/slog
+            - pkg: github.com/pkg/errors
+              desc: use the standard errors package
+            - pkg: encoding/gob
+              desc: JSON is the only wire format
+    dogsled:
+      max-blank-identifiers: 3
+    dupl:
+      threshold: 350
+    dupword:
+      keywords:
+        - the
+        - and
+        - a
+    errcheck:
+      disable-default-exclusions: false
+      check-type-assertions: true
+      check-blank: false
+      exclude-functions:
+        - io/ioutil.ReadFile
+        - io.Copy(*bytes.Buffer)
+        - io.Copy(os.Stdout)
+    errorlint:
+      errorf: true
+      errorf-multi: true
+      asserts: true
+      comparison: true
+    exhaustive:
+      check:
+        - switch
+        - map
+      default-signifies-exhaustive: true
+      package-scope-only: true
+      explicit-exhaustive-map: true
+      explicit-exhaustive-switch: true
+      default-case-required: true
+    exhaustruct:
+      include:
+        - .+\.Test
+        - github\.com/coffeebreak-ai/coffee-opencode-llm/internal/catalog\..+
+        - github\.com/coffeebreak-ai/coffee-opencode-llm/internal/config\..+
+      exclude:
+        - database/sql\.Null.*
+    forbidigo:
+      forbid:
+        - pattern: ^print(ln)?$
+          msg: Do not commit debug prints.
+        - pattern: ^spew\.(ConfigState\.)?Dump$
+      exclude-godoc-examples: false
+      analyze-types: true
+    gocognit:
+      min-complexity: 200
+    gocritic:
+      disable-all: false
+      enable-all: true
+      disabled-checks:
+        - unnamedResult
+      settings:
+        commentedOutCode:
+          minLength: 2000
+        hugeParam:
+          sizeThreshold: 400
+        ifElseChain:
+          minThreshold: 6
+        nestingReduce:
+          bodyWidth: 4
+        rangeExprCopy:
+          sizeThreshold: 200
+        rangeValCopy:
+          sizeThreshold: 400
+    gocyclo:
+      min-complexity: 50
+    godot:
+      scope: toplevel
+      exclude:
+        - '^fixme:'
+        - '^todo:'
+      capital: false
+      period: false
+    godox:
+      keywords:
+        - NOTE
+        - OPTIMIZE
+        - HACK
+    gomoddirectives:
+      replace-allow-list:
+        - ''
+      replace-local: true
+      exclude-forbidden: true
+      retract-allow-no-explanation: true
+    gomodguard:
+      allowed:
+        modules:
+          - github.com/go-chi/chi/v5
+          - gopkg.in/yaml.v3
+          - modernc.org/sqlite
+        domains:
+          - golang.org
+      blocked:
+        modules:
+          - github.com/sirupsen/logrus:
+              recommendations:
+                - log/slog
+              reason: the standard logger is the only one allowed.
+          - github.com/pkg/errors:
+              recommendations:
+                - errors
+              reason: the standard errors package is enough.
+        local-replace-directives: false
+    gosec:
+      includes:
+        - G101
+        - G102
+        - G103
+        - G104
+        - G106
+        - G107
+        - G108
+        - G109
+        - G110
+        - G111
+        - G112
+        - G113
+        - G114
+        - G201
+        - G202
+        - G203
+        - G204
+        - G301
+        - G302
+        - G303
+        - G304
+        - G305
+        - G306
+        - G307
+        - G401
+        - G402
+        - G403
+        - G404
+        - G501
+        - G502
+        - G503
+        - G504
+        - G505
+        - G601
+        - G602
+      severity: medium
+      confidence: medium
+      config:
+        G301: "0750"
+        G302: "0600"
+        G306: "0600"
+        global:
+          nosec: true
+      concurrency: 12
+    gosmopolitan:
+      allow-time-local: true
+    govet:
+      enable:
+        - appends
+        - asmdecl
+        - assign
+        - atomic
+        - atomicalign
+        - bools
+        - buildtag
+        - cgocall
+        - composites
+        - copylocks
+        - deepequalerrors
+        - defers
+        - directive
+        - errorsas
+        - findcall
+        - framepointer
+        - httpresponse
+        - ifaceassert
+        - loopclosure
+        - lostcancel
+        - nilfunc
+        - nilness
+        - printf
+        - reflectvaluecompare
+        - shift
+        - sigchanyzer
+        - slog
+        - sortslice
+        - stdmethods
+        - stringintconv
+        - structtag
+        - testinggoroutine
+        - tests
+        - unmarshal
+        - unreachable
+        - unsafeptr
+        - unusedresult
+        - unusedwrite
+      disable-all: true
+    importas:
+      no-unaliased: true
+      no-extra-aliases: false
+    inamedparam:
+      skip-single-param: false
+    mnd:
+      checks:
+        - argument
+        - case
+        - condition
+        - operation
+        - return
+        - assign
+      ignored-numbers:
+        - "2"
+        - "3"
+        - "4"
+        - "6"
+        - "8"
+        - "12"
+        - "0x0f"
+        - "0x3f"
+        - "0x40"
+        - "0x80"
+        - "0o600"
+        - "0o750"
+      ignored-functions:
+        - ^math\.
+        - ^http\.StatusText$
+    nakedret:
+      max-func-lines: 30
+    nestif:
+      min-complexity: 35
+    nilnil:
+      checked-types:
+        - ptr
+        - func
+        - iface
+        - map
+        - chan
+        - uintptr
+        - unsafeptr
+    nolintlint:
+      require-explanation: true
+      require-specific: true
+      allow-unused: true
+    nonamedreturns:
+      report-error-in-defer: true
+    paralleltest:
+      ignore-missing: true
+      ignore-missing-subtests: true
+    predeclared:
+      ignore:
+        - new
+        - int
+      qualified-name: true
+    promlinter:
+      strict: true
+      disabled-linters:
+        - Help
+        - MetricUnits
+        - Counter
+        - HistogramSummaryReserved
+        - MetricTypeInName
+        - ReservedChars
+        - CamelCase
+        - UnitAbbreviations
+    revive:
+      max-open-files: 2000
+      rules:
+        - name: atomic
+        - name: bare-return
+        - name: blank-imports
+        - name: bool-literal-in-expr
+        - name: call-to-gc
+        - name: comment-spacings
+        - name: confusing-naming
+        - name: constant-logical-expr
+        - name: context-as-argument
+          arguments:
+            - allowTypesBefore: '*testing.T'
+        - name: context-keys-type
+        - name: cyclomatic
+          arguments:
+            - 40
+        - name: datarace
+        - name: deep-exit
+        - name: defer
+          arguments:
+            - - call-chain
+              - loop
+        - name: dot-imports
+        - name: duplicated-imports
+        - name: enforce-map-style
+          arguments:
+            - make
+        - name: enforce-repeated-arg-type-style
+          arguments:
+            - any
+        - name: enforce-slice-style
+          arguments:
+            - any
+        - name: error-naming
+        - name: error-return
+        - name: error-strings
+        - name: errorf
+        - name: function-length
+          arguments:
+            - 150
+            - 0
+        - name: function-result-limit
+          arguments:
+            - 8
+        - name: get-return
+        - name: identical-branches
+        - name: if-return
+        - name: import-alias-naming
+          arguments:
+            - '[a-zA-Z]+'
+        - name: import-shadowing
+        - name: imports-blocklist
+          arguments:
+            - .*crypto.*
+          disabled: true
+        - name: increment-decrement
+        - name: line-length-limit
+          arguments:
+            - 255
+        - name: max-public-structs
+          arguments:
+            - 15
+          disabled: true
+        - name: modifies-parameter
+        - name: modifies-value-receiver
+        - name: optimize-operands-order
+        - name: range
+        - name: range-val-address
+        - name: range-val-in-closure
+        - name: receiver-naming
+        - name: redefines-builtin-id
+        - name: redundant-import-alias
+        - name: string-format
+          arguments:
+            - - fmt.Errorf[0]
+              - /(^|[^\.!?])$/
+              - must not end in punctuation
+            - - panic
+              - /^[^\n]*$/
+              - must not contain line breaks
+        - name: string-of-int
+        - name: struct-tag
+          arguments:
+            - json,inline
+        - name: superfluous-else
+          arguments:
+            - preserveScope
+        - name: time-equal
+        - name: time-naming
+        - name: unchecked-type-assertion
+          arguments:
+            - acceptIgnoredAssertionResult: true
+        - name: unconditional-recursion
+        - name: unexported-naming
+        - name: unexported-return
+        - name: unhandled-error
+          exclude:
+            - '**/*_test.go'
+        - name: unnecessary-stmt
+        - name: unreachable-code
+        - name: unused-parameter
+          arguments:
+            - allowRegex: ^_
+        - name: use-any
+        - name: useless-break
+        - name: var-declaration
+        - name: waitgroup-by-value
+    rowserrcheck:
+      packages: []
+    spancheck:
+      checks:
+        - end
+        - record-error
+        - set-status
+    staticcheck:
+      checks:
+        - all
+        - -SA1019
+        - -SA9003
+        - -ST1000
+        - -ST1003
+        - -ST1021
+      http-status-code-whitelist:
+        - "200"
+        - "400"
+        - "404"
+        - "500"
+    tagalign:
+      align: false
+      sort: false
+      order:
+        - json
+        - yaml
+        - yml
+        - toml
+        - mapstructure
+        - env
+        - binding
+        - validate
+      strict: true
+    testifylint:
+      disable-all: true
+      enable:
+        - blank-import
+        - bool-compare
+        - compares
+        - empty
+        - error-is-as
+        - error-nil
+        - expected-actual
+        - float-compare
+        - go-require
+        - len
+        - negative-positive
+        - nil-compare
+        - require-error
+        - suite-dont-use-pkg
+        - suite-extra-assert-call
+        - suite-thelper
+        - useless-assert
+      bool-compare:
+        ignore-custom-types: true
+      expected-actual:
+        pattern: ^expected
+      go-require:
+        ignore-http-handlers: true
+      require-error:
+        fn-pattern: ^(Errorf?|NoErrorf?)$
+      suite-extra-assert-call:
+        mode: require
+    testpackage:
+      skip-regexp: (export|internal)_test\.go
+      allow-packages:
+        - main
+        - catalog
+        - jev
+        - router
+        - store
+        - transport
+    unconvert:
+      fast-math: true
+      safe: true
+    unparam:
+      check-exported: false
+    unused:
+      field-writes-are-uses: true
+      post-statements-are-reads: false
+      exported-fields-are-used: true
+      parameters-are-used: true
+      local-variables-are-used: true
+      generated-is-used: true
+    usestdlibvars:
+      http-method: false
+      http-status-code: false
+      time-weekday: true
+      time-month: true
+      time-layout: true
+      crypto-hash: true
+      default-rpc-path: true
+      sql-isolation-level: true
+      tls-signature-scheme: true
+      constant-kind: true
+  exclusions:
+    generated: lax
+    rules:
+      - linters:
+          - dupl
+          - errcheck
+          - exhaustruct
+          - forbidigo
+          - gocritic
+          - godot
+          - gosec
+          - govet
+          - nilnil
+          - staticcheck
+          - unconvert
+          - unused
+        path: _test\.go
+      - linters:
+          - asasalint
+        path: (.+)_test\.go
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
+issues:
+  max-issues-per-linter: 100
+  max-same-issues: 50
+  new: false
+formatters:
+  enable:
+    - gofmt
+  settings:
+    gofmt:
+      simplify: false
+      rewrite-rules:
+        - pattern: interface{}
+          replacement: any
+        - pattern: a[b:len(a)]
+          replacement: a[b:]
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
